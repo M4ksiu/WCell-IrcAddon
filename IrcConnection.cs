@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading;
 using Squishy.Irc;
 using Squishy.Irc.Commands;
 using Squishy.Irc.Protocol;
@@ -19,6 +20,8 @@ namespace WCell.IRCAddon
 
     public class IrcConnection : IrcClient
     {
+        #region Fields
+
         #region Public Static Fields (used for configuration)
 
         public static bool AnnounceAuthToUser = true;
@@ -28,6 +31,7 @@ namespace WCell.IRCAddon
         public static bool HideIncomingIrcPackets = false;
         public static bool HideOutgoingIrcPackets = false;
         public static bool ReConnectOnDisconnect = true;
+        public static int ReConnectWaitTimer = 5;
         public static bool ReJoinOnKick = true;
         public static string WCellCmdPrefix = "#";
         public static bool AuthAllUsersOnJoin = false;
@@ -38,18 +42,26 @@ namespace WCell.IRCAddon
         {
             get
             {
-                return Squishy.Irc.ThrottledSendQueue.CharsPerSecond;
+                return ThrottledSendQueue.CharsPerSecond;
             }
             set
             {
                 ThrottledSendQueue.CharsPerSecond = value;
             }
         }
+
         #endregion
 
-        // Every channel the bot has joined
-        private HashSet<string> watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        #region Private Fields
 
+        //Every channel the bot has joined
+        private HashSet<string> watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        private Timer m_maintainConnTimer;
+
+        #endregion
+
+        #endregion
+        
         public IrcConnection()
         {
             RealmServer.RealmServer.Instance.AuthClient.Disconnected += AuthClientDisconnected;
@@ -57,8 +69,12 @@ namespace WCell.IRCAddon
             ProtocolHandler.PacketReceived += OnReceive;
             RealmServer.RealmServer.Shutdown += OnShutdown;
             RealmServer.RealmServer.Instance.StatusChanged += OnStatusNameChange;
+            m_maintainConnTimer = new Timer(maintainCallback);
         }
 
+        /// <summary>
+        /// The Main method
+        /// </summary>
         [Initialization(InitializationPass.Last, "Initializing IrcAddon")]
         public static void InitIrc()
         {
@@ -70,15 +86,23 @@ namespace WCell.IRCAddon
 
             AccountAssociationsList.LoadDictionary(AccountAssociationsList.AccountAssociationFileName);
 
+            Connect();
+        }
+
+        /// <summary>
+        /// Method to connect to the irc network
+        /// </summary>
+        public static void Connect()
+        {
             try
             {
                 var client = new IrcConnection
-                                 {
-                                     Nicks = IrcAddonConfig.Nicks,
-                                     UserName = IrcAddonConfig.UserName,
-                                     // the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
-                                     Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
-                                 };
+                {
+                    Nicks = IrcAddonConfig.Nicks,
+                    UserName = IrcAddonConfig.UserName,
+                    // the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
+                    Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
+                };
 
                 client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
             }
@@ -103,6 +127,8 @@ namespace WCell.IRCAddon
 
             IrcCommandHandler.Initialize();
             WCellUtil.Init(this);
+
+            m_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
         public void OnShutdown()
@@ -120,8 +146,6 @@ namespace WCell.IRCAddon
             IrcChannel chan = GetChannel(IrcAddonConfig.ChannelList[0]);
             UpdateTopic(chan, chan.Topic);
         }
-
-
 
         private void AuthClientDisconnected(object sender, EventArgs e)
         {
@@ -166,6 +190,17 @@ namespace WCell.IRCAddon
         protected override void OnConnectFail(Exception ex)
         {
             Console.WriteLine("Connection failed: " + ex);
+            Console.WriteLine("Trying to reconnect in {0}", ReConnectWaitTimer);
+            StartReConnectTimer();
+        }
+
+        /// <summary>
+        /// Starts the reconnect timer
+        /// </summary>
+        private void StartReConnectTimer()
+        {
+            Client.Disconnect();
+            m_maintainConnTimer.Change(0, ReConnectWaitTimer * 1000);
         }
 
         protected override void OnDisconnected(bool conLost)
@@ -173,14 +208,7 @@ namespace WCell.IRCAddon
             Console.WriteLine("Disconnected" + (conLost ? " (Connection lost)" : ""));
             if (conLost && ReConnectOnDisconnect)
             {
-                try
-                {
-                    InitIrc();
-                }
-                catch (Exception exc)
-                {
-                    Console.WriteLine(exc);
-                }
+                StartReConnectTimer();
             }
         }
 
@@ -298,13 +326,14 @@ namespace WCell.IRCAddon
 
         protected override void OnText(IrcUser user, IrcChannel chan, StringStream text)
         {
+            var uArgs = user.Args as WCellArgs;
             if (HideChatting != true)
             {
                 Console.WriteLine("<{0}> {1}", user, text);
             }
-            if (user.IsAuthenticated && text.String.StartsWith(WCellCmdPrefix))
+            if (user.IsAuthenticated && text.String.StartsWith(WCellCmdPrefix) && uArgs != null)
             {
-                WCellUtil.HandleCommand(user, chan, text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
+                WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan, text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
             }
         }
 
@@ -409,6 +438,13 @@ namespace WCell.IRCAddon
         #endregion
 
         #region Helper methods
+
+        private void maintainCallback(object state)
+        {
+            if(!LoggedIn)
+                InitIrc();
+        }
+
         /// <summary>
         /// A helper method to check whether or not the user is staff.
         /// Mostly used to maintain code readability.

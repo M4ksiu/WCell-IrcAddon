@@ -1,6 +1,4 @@
-﻿using Squishy.Irc;
-using WCell.Core;
-using WCell.RealmServer.Formulas;
+﻿using WCell.RealmServer.Formulas;
 using WCell.RealmServer.Stats;
 using WCell.RealmServer.Global;
 using Squishy.Irc.Commands;
@@ -120,8 +118,9 @@ namespace WCell.IRCAddon.Commands
 
         public override void Process(CmdTrigger trigger)
         {
+            var lines = trigger.Irc.Client.SendQueue.Length;
             trigger.Irc.Client.SendQueue.Clear();
-            trigger.Reply("Cleared SendQueue");
+            trigger.Reply("Cleared SendQueue of {0} lines", lines);
         }
     }
 

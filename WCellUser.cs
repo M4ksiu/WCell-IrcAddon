@@ -83,6 +83,10 @@ namespace WCell.IRCAddon
             get { return ChatLanguage.Universal; }
         }
 
+        //void IChatter.ReceiveMessage(IChatter sender, ChatChannel chan, string message)
+        //{
+
+        //}
         #endregion
 
         #region Implementation of IHasRole

@@ -1,4 +1,5 @@
-﻿using WCell.Constants.Factions;
+﻿using System.Collections;
+using WCell.Constants.Factions;
 using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;
 using WCell.Constants;
@@ -104,8 +105,8 @@ namespace WCell.IRCAddon.Commands
                     var chan = new ChatChannel(ircChannel);
 
                     chan.Invite(me, user);
-                    user.SendMessage(trigger.Args.User,
-                                     "A staff member wants to chat with you about your ticket. Please do not leave the channel.");
+                    //user.SendMessage(trigger.Args.User,
+                    //                 "A staff member wants to chat with you about your ticket. Please do not leave the channel.");
                 }
             }
             else

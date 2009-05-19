@@ -10,9 +10,7 @@ namespace WCell.IRCAddon.Commands
         public static IrcChannel Channel;
         public static IrcUser User;
 
-        //public WCellStr str;
-
-        public WCellCmdTrigger(IrcUser User, IrcChannel Channel, WCellStr text, RealmServerCmdArgs args) : base(text, args)
+        public WCellCmdTrigger(WCellUser user, IrcChannel channel, WCellStr text, RealmServerCmdArgs args) : base(text, args)
         {
         }
 

@@ -1,11 +1,10 @@
-﻿using WCell.Core;
+﻿using WCell.Constants.Factions;
+using WCell.Core;
 using WCell.RealmServer;
+using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;
-using WCell.RealmServer.Database;
-using WCell.RealmServer.Formulas;
-using WCell.RealmServer.Stats;
 using WCell.Util.Commands;
-using WCell.RealmServer.Global;
+
 
 namespace WCell.IRCAddon.Commands
 {
@@ -194,6 +193,40 @@ namespace WCell.IRCAddon.Commands
                     trigger.Reply(formattedString);
             }
         }
+    }
+
+    #endregion
+
+    #region AddTestChannel
+
+    public class AddTestChannelCommand : RealmServerCommand
+    {
+        protected override void Initialize()
+        {
+            Init("ADT");
+            Enabled = true;
+            EnglishDescription = "Command to create a new channel, make the WCellUser join and then echo the chat";
+            ParamInfo = "<ChannelName> <Player>";
+        }
+
+        public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
+        {
+            var wcellUser = trigger.Args.User as WCellUser;
+            var chanName = trigger.Text.NextWord();
+            var targetUsr = trigger.Args.GetCharArgumentOrTarget(trigger, trigger.Text.NextWord());
+
+            ChannelMember me = new ChannelMember(wcellUser);
+            ChatChannelGroup ircChannelGroup = new ChatChannelGroup(FactionGroup.Invalid);
+            var chatChan = new ChatChannel(ircChannelGroup, chanName);
+            chatChan.Invite(me, targetUsr);
+            //ChatMgr.OnChat += new ChatNotifyDelegate(ChatMgr_OnChat);
+
+        }
+
+        //void ChatMgr_OnChat(IChatter chatter, string message, WCell.Constants.ChatLanguage lang, WCell.Constants.ChatMsgType chatType, IGenericChatTarget target)
+        //{
+        //    throw new System.NotImplementedException();
+        //}
     }
 
     #endregion

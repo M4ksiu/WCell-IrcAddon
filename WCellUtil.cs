@@ -65,7 +65,7 @@ namespace WCell.IRCAddon
             return accName;
         }
 
-        public static bool HandleCommand(IrcUser user, IrcChannel chan, string text)
+        public static bool HandleCommand(WCellUser wcellUser, IrcUser user, IrcChannel chan, string text)
         {
             var uArgs = user.Args as WCellArgs;
 
@@ -77,7 +77,7 @@ namespace WCell.IRCAddon
                     WCellCmdTrigger.Channel = chan;
 
                     var cmdArgs = uArgs.CmdArgs;
-                    var trigger = new WCellCmdTrigger(user, chan, new WCellStr(text), cmdArgs);
+                    var trigger = new WCellCmdTrigger(wcellUser, chan, new WCellStr(text), cmdArgs);
 
                     // init the trigger and check if the given args are valid
                     if (trigger.InitTrigger())
