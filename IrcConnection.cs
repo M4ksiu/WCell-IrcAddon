@@ -13,6 +13,8 @@ using Squishy.Irc.Protocol;
 using Squishy.Network;
 using WCell.Constants;
 using WCell.Core.Initialization;
+using WCell.RealmServer.Misc;
+using WCell.Util.NLog;
 
 
 namespace WCell.IRCAddon
@@ -37,6 +39,8 @@ namespace WCell.IRCAddon
         public static bool AuthAllUsersOnJoin = false;
         public static bool UpdateTopicOnFlagAdded = true;
         public static IrcCmdCallingRange IrcCmdCallingRange = IrcCmdCallingRange.LocalChannel;
+        public static int ExceptionNotificationRank = 1000;
+        public static bool ExceptionNotify = true;
         //public static char IrcCmdPrefix = CommandHandler.RemoteCommandPrefix;
         public static int SendQueue
         {
@@ -70,7 +74,10 @@ namespace WCell.IRCAddon
             RealmServer.RealmServer.Shutdown += OnShutdown;
             RealmServer.RealmServer.Instance.StatusChanged += OnStatusNameChange;
             m_maintainConnTimer = new Timer(maintainCallback);
+            LogUtil.ExceptionRaised += LogUtil_ExceptionRaised;
         }
+
+
 
         /// <summary>
         /// The Main method
@@ -141,7 +148,7 @@ namespace WCell.IRCAddon
             Client.Disconnect();
         }
 
-        public void OnStatusNameChange(RealmStatus status)
+        private void OnStatusNameChange(RealmStatus status)
         {
             IrcChannel chan = GetChannel(IrcAddonConfig.ChannelList[0]);
             UpdateTopic(chan, chan.Topic);
@@ -335,6 +342,7 @@ namespace WCell.IRCAddon
             {
                 WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan, text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
             }
+
         }
 
         #endregion
@@ -438,6 +446,25 @@ namespace WCell.IRCAddon
         #endregion
 
         #region Helper methods
+
+        private void LogUtil_ExceptionRaised(string text, Exception exception)
+        {
+            if (ExceptionNotify)
+            {
+                foreach (IrcUser user in Users.Values)
+                {
+                    if (user.IsAuthenticated)
+                    {
+                        var uArgs = user.Args as WCellArgs;
+                        if (uArgs != null)
+                        {
+                            if (uArgs.Account.Role >= ExceptionNotificationRank)
+                                Send(text, exception);
+                        }
+                    }
+                }
+            }
+        }
 
         private void maintainCallback(object state)
         {
