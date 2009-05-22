@@ -15,6 +15,8 @@ using WCell.Constants;
 using WCell.Core.Initialization;
 using WCell.RealmServer.Misc;
 using WCell.Util.NLog;
+using WCell.Util;
+using StringStream=Squishy.Network.StringStream;
 
 
 namespace WCell.IRCAddon
@@ -74,7 +76,7 @@ namespace WCell.IRCAddon
             RealmServer.RealmServer.Shutdown += OnShutdown;
             RealmServer.RealmServer.Instance.StatusChanged += OnStatusNameChange;
             m_maintainConnTimer = new Timer(maintainCallback);
-            LogUtil.ExceptionRaised += LogUtil_ExceptionRaised;
+            LogUtil.ExceptionRaised += LogUtilExceptionRaised;
         }
 
 
@@ -447,7 +449,7 @@ namespace WCell.IRCAddon
 
         #region Helper methods
 
-        private void LogUtil_ExceptionRaised(string text, Exception exception)
+        private void LogUtilExceptionRaised(string text, Exception exception)
         {
             if (ExceptionNotify)
             {
@@ -459,7 +461,12 @@ namespace WCell.IRCAddon
                         if (uArgs != null)
                         {
                             if (uArgs.Account.Role >= ExceptionNotificationRank)
-                                Send(text, exception);
+                            {
+                                user.Msg(text);
+                                foreach (var line in exception.GetAllMessages())
+                                    user.Msg(line);
+                            }
+                                
                         }
                     }
                 }
