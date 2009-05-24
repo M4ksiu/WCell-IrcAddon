@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using WCell.Constants.Factions;
 using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;

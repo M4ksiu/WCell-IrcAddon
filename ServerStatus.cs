@@ -21,7 +21,7 @@ namespace WCell.IRCAddon
 
         public static string GetStatusName()
         {
-            if (RealmServer.RealmServer.Instance.IsRunning && RealmServer.RealmServer.Instance.IsRegisteredAtAuthServer
+            if (RealmServer.RealmServer.Instance.IsRunning && RealmServer.RealmServer.Instance.IsRunning
                 && !RealmServer.RealmServer.IsShuttingDown && RealmServer.RealmServer.Instance.AuthClient.IsConnected)
             {
                 statusName = "Online".Colorize(OnlineColor);

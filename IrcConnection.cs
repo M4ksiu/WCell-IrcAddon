@@ -10,10 +10,8 @@ using System.Threading;
 using Squishy.Irc;
 using Squishy.Irc.Commands;
 using Squishy.Irc.Protocol;
-using Squishy.Network;
 using WCell.Constants;
 using WCell.Core.Initialization;
-using WCell.RealmServer.Misc;
 using WCell.Util.NLog;
 using WCell.Util;
 using StringStream=Squishy.Network.StringStream;
@@ -21,7 +19,6 @@ using StringStream=Squishy.Network.StringStream;
 
 namespace WCell.IRCAddon
 {
-
     public class IrcConnection : IrcClient
     {
         #region Fields
@@ -46,14 +43,8 @@ namespace WCell.IRCAddon
         //public static char IrcCmdPrefix = CommandHandler.RemoteCommandPrefix;
         public static int SendQueue
         {
-            get
-            {
-                return ThrottledSendQueue.CharsPerSecond;
-            }
-            set
-            {
-                ThrottledSendQueue.CharsPerSecond = value;
-            }
+            get { return ThrottledSendQueue.CharsPerSecond; }
+            set { ThrottledSendQueue.CharsPerSecond = value; }
         }
 
         #endregion
@@ -67,7 +58,8 @@ namespace WCell.IRCAddon
         #endregion
 
         #endregion
-        
+
+        // Constructor
         public IrcConnection()
         {
             RealmServer.RealmServer.Instance.AuthClient.Disconnected += AuthClientDisconnected;
@@ -75,14 +67,13 @@ namespace WCell.IRCAddon
             ProtocolHandler.PacketReceived += OnReceive;
             RealmServer.RealmServer.Shutdown += OnShutdown;
             RealmServer.RealmServer.Instance.StatusChanged += OnStatusNameChange;
-            m_maintainConnTimer = new Timer(maintainCallback);
+            m_maintainConnTimer = new Timer(MaintainCallback);
             LogUtil.ExceptionRaised += LogUtilExceptionRaised;
         }
 
 
-
         /// <summary>
-        /// The Main method
+        /// The Main method. Connects and loads all For reconnecting use Connect()
         /// </summary>
         [Initialization(InitializationPass.Last, "Initializing IrcAddon")]
         public static void InitIrc()
@@ -103,15 +94,16 @@ namespace WCell.IRCAddon
         /// </summary>
         public static void Connect()
         {
+            
             try
             {
                 var client = new IrcConnection
-                {
-                    Nicks = IrcAddonConfig.Nicks,
-                    UserName = IrcAddonConfig.UserName,
-                    // the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
-                    Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
-                };
+                                 {
+                                     Nicks = IrcAddonConfig.Nicks,
+                                     UserName = IrcAddonConfig.UserName,
+                                     // the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
+                                     Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
+                                 };
 
                 client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
             }
@@ -122,7 +114,10 @@ namespace WCell.IRCAddon
             }
         }
 
-        // Fires when the Client is fully logged on the network and the End of Motd is sent (raw 376).
+        /// <summary>
+        /// Fires when the Client is fully logged on the network and the End of Motd is sent (raw 376).
+        /// Initializes command and auth handler
+        /// </summary>
         protected override void Perform()
         {
             foreach (var channel in IrcAddonConfig.ChannelList)
@@ -168,7 +163,7 @@ namespace WCell.IRCAddon
             UpdateTopic(chan);
         }
 
-        #region OnConnecting/OnDisconnected/Packets/OnExceptionRaised
+        #region OnConnecting/OnDisconnected/Packets/OnIrcExceptionRaised
 
         protected override void OnConnecting()
         {
@@ -209,7 +204,7 @@ namespace WCell.IRCAddon
         private void StartReConnectTimer()
         {
             Client.Disconnect();
-            m_maintainConnTimer.Change(0, ReConnectWaitTimer * 1000);
+            m_maintainConnTimer.Change(0, ReConnectWaitTimer*1000);
         }
 
         protected override void OnDisconnected(bool conLost)
@@ -230,8 +225,14 @@ namespace WCell.IRCAddon
 
         #region User related events/Methods
 
-        //Rejoin the channel the bot was kicked from, only called when the kicked user's name
-        //matches the bot's name
+        /// <summary>
+        /// Rejoin the channel the bot was kicked from.
+        /// Only called when the kicked user's name matches the bot's name
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="chan"></param>
+        /// <param name="target"></param>
+        /// <param name="reason"></param>
         protected override void OnKick(IrcUser from, IrcChannel chan, IrcUser target, string reason)
         {
             if (target == Me && ReJoinOnKick)
@@ -308,13 +309,12 @@ namespace WCell.IRCAddon
         // Bear in mind this will update the status of *any* channel he is given op or higher priv
         protected override void OnFlagAdded(IrcUser user, IrcChannel chan, Privilege priv, IrcUser target)
         {
-            if(target == Me && priv >= IrcAddonConfig.RequiredStaffPriv && UpdateTopicOnFlagAdded)
+            if (target == Me && priv >= IrcAddonConfig.RequiredStaffPriv && UpdateTopicOnFlagAdded)
             {
                 Console.WriteLine("Updating topic...");
                 UpdateTopic(chan);
             }
         }
-
 
         #endregion
 
@@ -342,9 +342,9 @@ namespace WCell.IRCAddon
             }
             if (user.IsAuthenticated && text.String.StartsWith(WCellCmdPrefix) && uArgs != null)
             {
-                WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan, text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
+                WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan,
+                                        text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
             }
-
         }
 
         #endregion
@@ -353,7 +353,8 @@ namespace WCell.IRCAddon
 
         /// <summary>
         /// Return wether or not the given trigger may be processed.
-        /// Default: Only allows if local or no user triggered it.
+        /// Auth command will always be processed.
+        /// Other command triggers will be handled according to the user's priv levels
         /// </summary>
         public override bool MayTriggerCommand(CmdTrigger trigger, Command cmd)
         {
@@ -389,7 +390,7 @@ namespace WCell.IRCAddon
                         (userChan.IsUserAtLeast(trigger.User, IrcAddonConfig.RequiredStaffPriv)))
                         return true;
 
-                    else if(cmd is AuthCommand)
+                    else if (cmd is AuthCommand)
                         return true;
                 }
                 else if (cmd is AuthCommand || CheckIsStaff(trigger.User))
@@ -400,6 +401,14 @@ namespace WCell.IRCAddon
             return false;
         }
 
+        /// <summary>
+        /// Method to check whether the input is a command. Will return true if user is privileged or command is
+        /// the auth command (as long as it's in private messages)
+        /// </summary>
+        /// <param name="user">The triggerer</param>
+        /// <param name="chan"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
         public override bool TriggersCommand(IrcUser user, IrcChannel chan, StringStream input)
         {
             if (chan != null)
@@ -408,7 +417,7 @@ namespace WCell.IRCAddon
                 {
                     if (user.IsAuthenticated && CheckIsStaff(user))
                     {
-                            return true;
+                        return true;
                     }
 
                     if (chan.IsUserAtLeast(user, IrcAddonConfig.RequiredStaffPriv))
@@ -417,7 +426,9 @@ namespace WCell.IRCAddon
                     }
                 }
             }
-            else if(input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
+
+                // The auth command can always be called by anyone as long as it's done in private messages
+            else if (input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
             {
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
@@ -431,6 +442,11 @@ namespace WCell.IRCAddon
             base.OnUnknownCommandUsed(trigger);
         }
 
+        /// <summary>
+        /// Method called when an Irc Exception is raised
+        /// </summary>
+        /// <param name="trigger"></param>
+        /// <param name="ex"></param>
         protected override void OnCommandFail(CmdTrigger trigger, Exception ex)
         {
             Command cmd = trigger.Command;
@@ -449,6 +465,11 @@ namespace WCell.IRCAddon
 
         #region Helper methods
 
+        /// <summary>
+        /// Method called by the ExceptionRaised event
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="exception"></param>
         private void LogUtilExceptionRaised(string text, Exception exception)
         {
             if (ExceptionNotify)
@@ -466,16 +487,15 @@ namespace WCell.IRCAddon
                                 foreach (var line in exception.GetAllMessages())
                                     user.Msg(line);
                             }
-                                
                         }
                     }
                 }
             }
         }
 
-        private void maintainCallback(object state)
+        private void MaintainCallback(object state)
         {
-            if(!LoggedIn)
+            if (!LoggedIn)
                 InitIrc();
         }
 
@@ -484,16 +504,16 @@ namespace WCell.IRCAddon
         /// Mostly used to maintain code readability.
         /// Did not use in places I really don't want anything to go wrong
         /// and also in places where I wanted the flow of code to be 
-        /// centralised for readability.
+        /// centralized for readability.
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        private bool CheckIsStaff(IrcUser user)
+        public static bool CheckIsStaff(IrcUser user)
         {
             var uArgs = user.Args as WCellArgs;
-            if(uArgs != null)
+            if (uArgs != null)
             {
-                if(uArgs.Account.Role.IsStaff)
+                if (uArgs.Account.Role.IsStaff)
                     return true;
             }
             return false;
@@ -507,19 +527,22 @@ namespace WCell.IRCAddon
         /// <returns></returns>
         private bool CheckCmdCallingRange(CmdTrigger trigger, IrcChannel chan)
         {
-            if(trigger.Command is AuthCommand)
+            if (trigger.Command is AuthCommand)
                 return true;
 
             switch (IrcCmdCallingRange)
             {
+                    // Allow to call commands on any target channel
                 case IrcCmdCallingRange.Everywhere:
                     return true;
 
+                    // Allow to call commands if the commands does not contain the channel argument
                 case IrcCmdCallingRange.IsPrivilegedOnTrgt:
                     if (!trigger.Text.Contains("#"))
                         return true;
 
-                    if(trigger.Command is JoinCommand)
+                    // Join command should always be available
+                    if (trigger.Command is JoinCommand)
                         return true;
 
                     else
@@ -531,21 +554,24 @@ namespace WCell.IRCAddon
 
                         if (targetChan.HasUser(user.Nick))
                         {
-                            if(targetChan.IsUserAtLeast(user, IrcAddonConfig.RequiredStaffPriv))
-                            return true;
+                            if (targetChan.IsUserAtLeast(user, IrcAddonConfig.RequiredStaffPriv))
+                                return true;
                         }
                     }
                     break;
 
                 default:
+                    // Allow to call commands if the commands does not contain the channel argument
                     if (!trigger.Text.Contains("#"))
                         return true;
 
                     else
                     {
-                        if(trigger.Command is JoinCommand)
+                        // Join command should always be available
+                        if (trigger.Command is JoinCommand)
                             return true;
 
+                        // IF target chan is the same as the triggerer's chan, allow command
                         string chanName = trigger.Args.CloneStream().NextWord(" ");
                         var asd = trigger.Args;
                         if (chan.Name == chanName)
@@ -570,7 +596,8 @@ namespace WCell.IRCAddon
                 {
                     if (text.Contains("Server status: "))
                     {
-                        text = Regex.Replace(text, @"Server status\: [^$ ]+", "Server status: " + ServerStatus.StatusName);
+                        text = Regex.Replace(text, @"Server status\: [^$ ]+",
+                                             "Server status: " + ServerStatus.StatusName);
                         chan.Topic = text;
                     }
 
@@ -581,16 +608,17 @@ namespace WCell.IRCAddon
         }
 
         /// <summary>
-        /// A static method 
+        /// A static method to update and format the channel's topic
         /// </summary>
-        /// <param name="chan"></param>
+        /// <param name="chan">The target channel.</param>
         public static void UpdateTopic(IrcChannel chan)
         {
             if (chan == null) return;
 
             if (chan.Topic.Contains("Server status: "))
             {
-                chan.Topic = Regex.Replace(chan.Topic, @"Server status\: [^$ ]+", "Server status: " + ServerStatus.StatusName);
+                chan.Topic = Regex.Replace(chan.Topic, @"Server status\: [^$ ]+",
+                                           "Server status: " + ServerStatus.StatusName);
             }
 
             else
@@ -598,6 +626,7 @@ namespace WCell.IRCAddon
                 chan.Topic = chan.Topic.Trim() + " | Server status: " + ServerStatus.StatusName;
             }
         }
+
         #endregion
     }
 }
