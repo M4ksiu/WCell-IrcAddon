@@ -12,12 +12,13 @@ using Squishy.Irc.Commands;
 using Squishy.Irc.Protocol;
 using WCell.Constants;
 using WCell.Core.Initialization;
+using WCell.RealmServer;
 using WCell.Util.NLog;
 using WCell.Util;
 using StringStream=Squishy.Network.StringStream;
 
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public class IrcConnection : IrcClient
     {
@@ -62,11 +63,11 @@ namespace WCell.IRCAddon
         // Constructor
         public IrcConnection()
         {
-            RealmServer.RealmServer.Instance.AuthClient.Disconnected += AuthClientDisconnected;
-            RealmServer.RealmServer.Instance.AuthClient.Connected += AuthClientConnected;
+            RealmServer.Instance.AuthClient.Disconnected += AuthClientDisconnected;
+            RealmServer.Instance.AuthClient.Connected += AuthClientConnected;
             ProtocolHandler.PacketReceived += OnReceive;
-            RealmServer.RealmServer.Shutdown += OnShutdown;
-            RealmServer.RealmServer.Instance.StatusChanged += OnStatusNameChange;
+            RealmServer.Shutdown += OnShutdown;
+            RealmServer.Instance.StatusChanged += OnStatusNameChange;
             m_maintainConnTimer = new Timer(MaintainCallback);
             LogUtil.ExceptionRaised += LogUtilExceptionRaised;
         }

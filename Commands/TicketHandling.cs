@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using WCell.Constants.Factions;
+﻿using WCell.Constants.Factions;
 using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;
 using WCell.Constants;
@@ -8,10 +6,10 @@ using WCell.Intercommunication.DataTypes;
 using WCell.RealmServer.Entities;
 using WCell.RealmServer.Help.Tickets;
 using WCell.Constants.Tickets;
-using WCell.RealmServer.Misc;
+using WCell.Util.Commands;
 
 
-namespace WCell.IRCAddon.Commands
+namespace WCellAddon.IRCAddon.Commands
 {
     public class AddTestTicketCommand : RealmServerCommand
     {
@@ -61,7 +59,7 @@ namespace WCell.IRCAddon.Commands
             }
         }
 
-        public override void Process(Util.Commands.CmdTrigger<RealmServerCmdArgs> trigger)
+        public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
         {
             var name = trigger.Text.NextWord();
             var tType = trigger.Text.NextEnum<TicketType>(" ");
@@ -88,7 +86,7 @@ namespace WCell.IRCAddon.Commands
         }
 
 
-        public override void Process(Util.Commands.CmdTrigger<RealmServerCmdArgs> trigger)
+        public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
         {
             var ticket = trigger.Args.TicketHandler.HandlingTicket;
             if (ticket != null)

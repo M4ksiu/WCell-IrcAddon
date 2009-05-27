@@ -1,7 +1,7 @@
 ﻿using WCell.Core.Addons;
 using System.Globalization;
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public class IrcAddon : WCellAddonBase
     {

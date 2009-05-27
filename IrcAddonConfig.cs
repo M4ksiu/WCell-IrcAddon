@@ -1,6 +1,6 @@
 ﻿using Squishy.Irc;
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public class IrcAddonConfig
     {

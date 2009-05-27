@@ -3,7 +3,7 @@ using WCell.RealmServer.Commands;
 using WCellStr = WCell.Util.StringStream;
 using Squishy.Irc;
 
-namespace WCell.IRCAddon.Commands
+namespace WCellAddon.IRCAddon.Commands
 {
     public class WCellCmdTrigger : RealmServerCmdTrigger
     {

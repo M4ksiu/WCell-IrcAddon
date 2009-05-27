@@ -1,12 +1,12 @@
-﻿using WCell.IRCAddon.Commands;
-using WCell.RealmServer;
+﻿using WCell.RealmServer;
 using WCell.RealmServer.Commands;
 using WCell.Intercommunication.DataTypes;
 using Squishy.Irc;
+using WCellAddon.IRCAddon.Commands;
 using WCellStr = WCell.Util.StringStream;
 using IrcStr = Squishy.Network.StringStream;
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public static class WCellUtil
     {
@@ -53,8 +53,8 @@ namespace WCell.IRCAddon
         {
             var accName = GetAccName(authName);
             return accName != null
-                       ? RealmServer.RealmServer.Instance.GetOrRequestAccount(accName)
-                       : RealmServer.RealmServer.Instance.GetOrRequestAccount(authName);
+                       ? RealmServer.Instance.GetOrRequestAccount(accName)
+                       : RealmServer.Instance.GetOrRequestAccount(authName);
             return null;
         }
 

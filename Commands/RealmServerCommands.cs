@@ -1,4 +1,6 @@
-﻿using WCell.Constants.Factions;
+﻿using Squishy.Irc.Commands;
+using Squishy.Irc.Protocol;
+using WCell.Constants.Factions;
 using WCell.Core;
 using WCell.RealmServer;
 using WCell.RealmServer.Chat;
@@ -6,7 +8,7 @@ using WCell.RealmServer.Commands;
 using WCell.Util.Commands;
 
 
-namespace WCell.IRCAddon.Commands
+namespace WCellAddon.IRCAddon.Commands
 {
     #region Custom RealmServerCommands
 
@@ -44,7 +46,7 @@ namespace WCell.IRCAddon.Commands
                 string accName = trigger.Text.NextWord();
                 if (accName != null)
                 {
-                    RealmAccount acc = ServerApp<RealmServer.RealmServer>.Instance.GetOrRequestAccount(accName);
+                    RealmAccount acc = ServerApp<RealmServer>.Instance.GetOrRequestAccount(accName);
                     if (acc != null)
                     {
                         if (acc.IsActive)
@@ -132,6 +134,7 @@ namespace WCell.IRCAddon.Commands
 
     public class CompactHelpCommand : RealmServerCommand
     {
+        public static int MaxUncompressedCmds = 3;
 
         protected override void Initialize()
         {
@@ -145,52 +148,58 @@ namespace WCell.IRCAddon.Commands
         // IF there is something I'm not proud of it's this.
         public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
         {
-            if(!trigger.Text.HasNext)
+            string alias = trigger.Text.NextWord();
+            var cmds = CommandHandler.Instance.Commands;
+
+            if(alias.Length > 0)
             {
-                string shortCommandString = "Commands are: ";
-                string formattedCmd;
-                var cmds = CommandHandler.Instance.Commands;
-
-                int i = 1;
-                foreach(var cmd in cmds)
+                var matches = CommandHandler.Instance.GetCommands(alias);
+                if(matches == null)
                 {
-                    formattedCmd = cmd.Name + ", ";
-                    shortCommandString += formattedCmd;
+                    trigger.Reply("Command '{0}' does not exist", alias);
+                    return;
+                }
 
-                    i++;
-                    if(i == 20)
+                else if (matches.Count <= MaxUncompressedCmds)
+                {
+                    foreach(var cmd in matches)
                     {
-                        i = 0;
-                        shortCommandString += '%';
+                        string desc = string.Format("{0} ({1})", cmd.Usage, cmd.EnglishDescription);
+                        trigger.Reply(desc);
                     }
                 }
-                var cmdArray = shortCommandString.Split('%');
-                foreach(var sentence in cmdArray)
-                    trigger.Reply(sentence.TrimEnd(' ', ','));
+                return;
             }
-            else
+            trigger.Reply("All current commands:");
+            string line = "";
+            foreach (var cmd in cmds)
             {
-                string cmdStr = "";
-                var cmdAlias = trigger.Text.Remainder;
-                var cmds = CommandHandler.Instance.GetCommands(cmdAlias);
-                string formattedString = "Found " + cmds.Count + " commands: ";
-                var subCmdNames = " SubCommands: ";
-
-                foreach(var cmd in cmds)
+                if (cmd.Enabled && cmd.MayTrigger(trigger, cmd, false))
                 {
-                    cmdStr += "'" + cmd.Name + "' ,";
-
-                    if(cmd.SubCommands.Count >= 1)
+                    string subCmdStr = "";
+                    foreach(var subCmd in cmd.SubCommands)
                     {
-                        foreach (var subcmd in cmd.SubCommands)
-                            subCmdNames += subcmd.Name + " ";
-
-                        cmdStr += subCmdNames;
+                        subCmdStr += subCmd.Name + ", ";
                     }
+                    var cmdStr = cmd.Name + " (" + cmd.Usage + ") ";
+
+                    if (line.Length + cmdStr.Length >= IrcProtocol.MaxModCount)
+                    {
+                        trigger.Reply(line);
+                        line = "";
+                    }
+                    else
+                    {
+                        line += " ";
+                    }
+
+                    line += cmdStr;
                 }
-                formattedString += cmdStr;
-                if(cmds.Count > 0)
-                    trigger.Reply(formattedString);
+            }
+
+            if (line.Length > 0)
+            {
+                trigger.Reply(line);
             }
         }
     }

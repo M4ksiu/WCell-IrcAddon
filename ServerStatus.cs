@@ -1,6 +1,7 @@
 ﻿using Squishy.Irc;
+using WCell.RealmServer;
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public class ServerStatus
     {
@@ -21,8 +22,8 @@ namespace WCell.IRCAddon
 
         public static string GetStatusName()
         {
-            if (RealmServer.RealmServer.Instance.IsRunning && RealmServer.RealmServer.Instance.IsRunning
-                && !RealmServer.RealmServer.IsShuttingDown && RealmServer.RealmServer.Instance.AuthClient.IsConnected)
+            if (RealmServer.Instance.IsRunning && RealmServer.Instance.IsRunning
+                && !RealmServer.IsShuttingDown && RealmServer.Instance.AuthClient.IsConnected)
             {
                 statusName = "Online".Colorize(OnlineColor);
             }

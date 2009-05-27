@@ -3,7 +3,7 @@ using WCell.Intercommunication.DataTypes;
 using WCell.Constants;
 using WCell.Util.Commands;
 
-namespace WCell.IRCAddon.Commands
+namespace WCellAddon.IRCAddon.Commands
 {
     #region Staff on IRC managing commands
 

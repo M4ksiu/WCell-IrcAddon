@@ -8,7 +8,7 @@
     <ProjectGuid>{E8F36B44-3596-42A5-9380-4386CF04EDD6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WCell.IRCAddon</RootNamespace>
+    <RootNamespace>WCellAddon.IRCAddon</RootNamespace>
     <AssemblyName>WCell.IRCAddon</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

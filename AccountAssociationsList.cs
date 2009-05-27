@@ -3,7 +3,7 @@ using System.IO;
 using System.Xml.Serialization;
 using WCell.Util;
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public class AccountAssociationsList : XmlConfig<AccountAssociationsList>
     {

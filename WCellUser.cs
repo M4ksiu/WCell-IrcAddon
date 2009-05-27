@@ -14,7 +14,7 @@ using WCell.RealmServer.Privileges;
 using WCell.Util.Commands;
 using WCell.RealmServer.Help.Tickets;
 
-namespace WCell.IRCAddon
+namespace WCellAddon.IRCAddon
 {
     public class WCellUser : IUser, ITicketHandler
     {

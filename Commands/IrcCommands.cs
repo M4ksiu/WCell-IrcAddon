@@ -1,9 +1,10 @@
-﻿using WCell.RealmServer.Formulas;
+﻿using WCell.RealmServer;
+using WCell.RealmServer.Formulas;
 using WCell.RealmServer.Stats;
 using WCell.RealmServer.Global;
 using Squishy.Irc.Commands;
 
-namespace WCell.IRCAddon.Commands
+namespace WCellAddon.IRCAddon.Commands
 {
      #region Custom IrcCommands
 
@@ -78,7 +79,7 @@ namespace WCell.IRCAddon.Commands
 
         public override void Process(CmdTrigger trigger)
         {
-            trigger.Reply("Server has been running for {0}.", RealmServer.RealmServer.RunTime);
+            trigger.Reply("Server has been running for {0}.", RealmServer.RunTime);
             trigger.Reply("There are {0} players online (Alliance: {1}, Horde: {2}).",
                           World.CharacterCount, World.AllianceCharCount, World.HordeCharCount);
         }
