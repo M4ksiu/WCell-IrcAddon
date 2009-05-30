@@ -1,19 +1,23 @@
-﻿using WCell.RealmServer;
+﻿using System.Collections;
+using Squishy.Irc;
+using WCell.RealmServer;
 using WCell.RealmServer.Formulas;
 using WCell.RealmServer.Stats;
 using WCell.RealmServer.Global;
 using Squishy.Irc.Commands;
+using WCellAddon.IRCAddon.Voting;
 
 namespace WCellAddon.IRCAddon.Commands
 {
-     #region Custom IrcCommands
+    #region Custom IrcCommands
 
     #region StatsCommand
     public class StatsCommand : Command
     {
         public static bool MuteChannelWhenPostingStats = false;
 
-        public StatsCommand() : base("RealmStats")
+        public StatsCommand()
+            : base("RealmStats")
         {
             Usage = "RealmStats";
             Description = "Prints the stats of the realm to the channel";
@@ -43,7 +47,8 @@ namespace WCellAddon.IRCAddon.Commands
     #region UpdateStatusCommand
     public class UpdateStatusCommand : Command
     {
-        public UpdateStatusCommand() : base("UpdateStatus")
+        public UpdateStatusCommand()
+            : base("UpdateStatus")
         {
             Usage = "UpdateStatus";
             Description = "Command to update the status when it wasn't done automatically";
@@ -51,16 +56,25 @@ namespace WCellAddon.IRCAddon.Commands
 
         public override void Process(CmdTrigger trigger)
         {
-            // Bypassing boolean AutomaticTopicUpdating (manual update should work always)
-            if (IrcConnection.AutomaticTopicUpdating == false)
+            var chan = trigger.Channel;
+            if (trigger.Args.HasNext)
             {
-                IrcConnection.AutomaticTopicUpdating = true;
-                IrcConnection.UpdateTopic(trigger.Channel);
-                IrcConnection.AutomaticTopicUpdating = false;
+                chan = trigger.Irc.GetChannel(trigger.Args.NextWord());
             }
-            else
+
+            if (chan != null)
             {
-                IrcConnection.UpdateTopic(trigger.Channel);
+                // Bypassing boolean AutomaticTopicUpdating (manual update should work always)
+                if (IrcConnection.AutomaticTopicUpdating == false)
+                {
+                    IrcConnection.AutomaticTopicUpdating = true;
+                    IrcConnection.UpdateTopic(trigger.Channel);
+                    IrcConnection.AutomaticTopicUpdating = false;
+                }
+                else
+                {
+                    IrcConnection.UpdateTopic(trigger.Channel);
+                }
             }
         }
     }
@@ -71,7 +85,8 @@ namespace WCellAddon.IRCAddon.Commands
 
     public class RealmInfoCommand : Command
     {
-        public RealmInfoCommand() : base("ServerStats")
+        public RealmInfoCommand()
+            : base("ServerStats")
         {
             Usage = "ServerStats";
             Description = "Command to show simple server stats";
@@ -91,7 +106,8 @@ namespace WCellAddon.IRCAddon.Commands
 
     public class RealmRatesCommand : Command
     {
-        public RealmRatesCommand() : base("Rates")
+        public RealmRatesCommand()
+            : base("Rates")
         {
             Usage = "Rates";
             Description = "Displays the realm rates";
@@ -125,6 +141,118 @@ namespace WCellAddon.IRCAddon.Commands
         }
     }
 
+    #endregion
+
+    #region VoteCommands
+
+    public class VoteStartCommand : Command
+    {
+        public static char VoteAnswerPrefix = '@';
+        public VoteStartCommand()
+            : base("StartVote", "SV")
+        {
+            Usage = "StartVote [Duration (seconds)]";
+            Description = "Command to start a vote. If no duration is given, will last indefinitely";
+        }
+
+        public override void Process(CmdTrigger trigger)
+        {
+            var chan = trigger.Channel;
+            var copyStream = trigger.Args.CloneStream();
+            var duration = trigger.Args.NextInt();
+            string question;
+            if(duration > 0)
+                question = trigger.Args.Remainder;
+            else
+            {
+                question = copyStream.Remainder;
+            }
+
+            if (chan != null)
+            {
+                if (VoteMgr.ChannelVotes.ContainsKey(chan))
+                {
+                    trigger.Reply("There is already an active vote on this channel");
+                    return;
+                }
+
+                trigger.Reply("Starting vote: {0}", question);
+                trigger.Reply("You can vote using {0}yes or {0}no", VoteAnswerPrefix);
+                var voteMgr = VoteMgr.Mgr;
+
+                // If we have a duration given, use it.
+                if (duration > 0)
+                {
+                    voteMgr.StartNewVote(chan, question, duration);
+                }
+                else { voteMgr.StartNewVote(chan, question); }
+
+            }
+            else
+            {
+                trigger.Reply("You can only open a vote on a valid channel (the command must come from the channel).");
+            }
+        }
+    }
+
+    public class EndVoteCommand : Command
+    {
+        public EndVoteCommand()
+            : base("EndVote", "EV")
+        {
+            Usage = "EndVote [vote]";
+            Description = "Command to end a single vote or all votes. If no vote is defined, will dispose of all open votes.";
+        }
+
+        public override void Process(CmdTrigger trigger)
+        {
+            var chan = trigger.Channel;
+            var voteName = trigger.Args.Remainder;
+
+            if (VoteMgr.ChannelVotes.ContainsKey(chan) && voteName != "")
+            {
+                var vote = Vote.GetVote(voteName);
+                trigger.Reply("The vote has ended!");
+                trigger.Reply(VoteMgr.Mgr.Stats(vote));
+                trigger.Reply(VoteMgr.Mgr.Result(vote));
+
+            }
+
+            else
+            {
+                Vote[] votesArray = new Vote[VoteMgr.Votes.Values.Count];
+                VoteMgr.Votes.Values.CopyTo(votesArray, 0);
+                foreach (var vote in votesArray)
+                    VoteMgr.Mgr.EndVote(vote);
+                trigger.Reply("Disposed of {0} votes.", votesArray.Length);
+            }
+        }
+    }
+
+
+    public class VoteInfoCommand : Command
+    {
+        public VoteInfoCommand()
+            : base("VoteInfo", "VI")
+        {
+            Usage = "VoteInfo";
+            Description = "Command to show info about the current channel's vote";
+        }
+
+        public override void Process(CmdTrigger trigger)
+        {
+            var chan = trigger.Channel;
+            var voteName = trigger.Args.Remainder;
+
+            if (VoteMgr.ChannelVotes.ContainsKey(chan) && voteName != "")
+            {
+                Vote vote;
+                VoteMgr.ChannelVotes.TryGetValue(chan, out vote);
+                trigger.Reply("There are a total of '{0}' votes, '{1}' positive, '{2}' negative", vote.TotalVotes, vote.PositiveCount, vote.NegativeCount);
+                trigger.Reply("Vote has ran for {0}", vote.RunTime);
+            }
+        }
+    }
     #endregion
 
     #endregion

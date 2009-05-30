@@ -74,6 +74,9 @@
     <Compile Include="IrcConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerStatus.cs" />
+    <Compile Include="Voting\IVote.cs" />
+    <Compile Include="Voting\Vote.cs" />
+    <Compile Include="Voting\VoteMgr.cs" />
     <Compile Include="WCellAddon.cs" />
     <Compile Include="WCellArgs.cs" />
     <Compile Include="Commands\WCellCmdTrigger.cs" />
