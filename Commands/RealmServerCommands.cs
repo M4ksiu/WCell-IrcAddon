@@ -145,7 +145,7 @@ namespace WCellAddon.IRCAddon.Commands
             ParamInfo = "[CommandName]";
         }
 
-        // IF there is something I'm not proud of it's this.
+        // Domi's helpcommand just modified.
         public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
         {
             string alias = trigger.Text.NextWord();

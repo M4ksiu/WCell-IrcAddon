@@ -3,7 +3,7 @@ using Squishy.Irc;
 
 namespace WCellAddon.IRCAddon.Voting
 {
-    internal interface IVote : IDisposable
+    public interface IVote : IDisposable
     {
         /// <summary>
         /// The timespan since creation to now.

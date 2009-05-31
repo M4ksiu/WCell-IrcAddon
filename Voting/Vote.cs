@@ -5,7 +5,7 @@ using System;
 
 namespace WCellAddon.IRCAddon.Voting
 {
-    class Vote : IVote
+    public class Vote : IVote
     {
         private string m_Vote;
         private int m_PositiveCount = 0;
@@ -30,6 +30,7 @@ namespace WCellAddon.IRCAddon.Voting
             m_CreationTime = DateTime.Now;
 
             m_Timer = new Timer(lifeSpan * 1000);
+            m_Timer.AutoReset = false;
             m_Timer.Start();
             m_Timer.Elapsed += m_Timer_Elapsed;
         }
@@ -56,6 +57,19 @@ namespace WCellAddon.IRCAddon.Voting
         {
             get { return m_CreationTime.Subtract(DateTime.Now); }
         }
+
+        /// <summary>
+        /// Returns the formatted string representation of the lifespan of the vote
+        /// </summary>
+        public string RunTimeString
+        {
+            get
+            {
+                return (Math.Abs(RunTime.Days) + " Days, " + Math.Abs(RunTime.Hours) + " Hours, " + Math.Abs(RunTime.Minutes) + " Minutes, " +
+                               Math.Abs(RunTime.Seconds) + " Seconds");
+            }
+        }
+
         /// <summary>
         /// The duration of the voting period. If 0, the vote lasts indefinitely.
         /// </summary>
@@ -132,21 +146,29 @@ namespace WCellAddon.IRCAddon.Voting
         /// <summary>
         /// Returns the Vote from all currently open votes.
         /// </summary>
-        /// <param name="voteQuestion"></param>
+        /// <param name="channel">The channel the vote takes place in.</param>
         /// <returns></returns>
-        public static Vote GetVote(string voteQuestion)
+        public static Vote GetVote(IrcChannel channel)
         {
             Vote vote;
-            VoteMgr.Votes.TryGetValue(voteQuestion, out vote);
+            VoteMgr.Votes.TryGetValue(channel, out vote);
             return vote;
         }
 
+        /// <summary>
+        /// Returns the vote question
+        /// </summary>
+        /// <returns></returns>
+        public string ToString()
+        {
+            return VoteQuestion;
+        }
         /// <summary>
         /// Call this after voting has finished and you don't need the object any longer.
         /// </summary>
         public void Dispose()
         {
-            var vote = GetVote(VoteQuestion);
+            var vote = GetVote(Channel);
             Destroy(vote);
         }
 
@@ -156,9 +178,9 @@ namespace WCellAddon.IRCAddon.Voting
         /// <param name="vote"></param>
         private void Destroy(Vote vote)
         {
-            vote.m_Timer.Stop();
-            VoteMgr.Votes.Remove(vote.VoteQuestion);
-            VoteMgr.ChannelVotes.Remove(vote.Channel);
+            if(vote.m_Timer != null)
+                vote.m_Timer.Stop();
+            VoteMgr.Votes.Remove(vote.Channel);
 
             vote.disposed = true;
         }

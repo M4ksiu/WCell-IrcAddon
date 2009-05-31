@@ -19,14 +19,14 @@ namespace WCellAddon.IRCAddon
         /// <summary>
         /// Contains all open votes
         /// </summary>
-        [NotVariable]
-        public static Dictionary<string, Vote> Votes = new Dictionary<string, Vote>(StringComparer.InvariantCultureIgnoreCase);
+        //[NotVariable]
+        //public static Dictionary<string, Vote> Votes = new Dictionary<string, Vote>(StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Contains channels (and the corresponding votes) with currently active votes
         /// </summary>
         [NotVariable]
-        public static Dictionary<IrcChannel, Vote> ChannelVotes = new Dictionary<IrcChannel, Vote>();
+        public static Dictionary<IrcChannel, Vote> Votes = new Dictionary<IrcChannel, Vote>();
 
         private static VoteMgr m_Instance = new VoteMgr();
 
@@ -43,13 +43,10 @@ namespace WCellAddon.IRCAddon
         /// </summary>
         /// <param name="channel">The channel where the voting takes place</param>
         /// <param name="question">The string we are voting over</param>
-        public bool StartNewVote(IrcChannel channel, string question)
+        public void StartNewVote(IrcChannel channel, string question)
         {
             var vote = new Vote(question, channel);
-            Votes.Add(question, vote);
-            ChannelVotes.Add(channel, vote);
-            var args = channel.Args as IVote;
-            args = vote;
+            Votes.Add(channel, vote);
 
             channel.TextReceived += (user, text) =>
                                         {
@@ -69,14 +66,12 @@ namespace WCellAddon.IRCAddon
                                                 }
                                             }
                                         };
-            return true;
         }
 
-        public bool StartNewVote(IrcChannel channel, string question, int durationSeconds)
+        public void StartNewVote(IrcChannel channel, string question, int durationSeconds)
         {
             var vote = new Vote(question, channel, durationSeconds);
-            Votes.Add(question, vote);
-            ChannelVotes.Add(channel, vote);
+            Votes.Add(channel, vote);
 
             channel.TextReceived += (user, text) =>
             {
@@ -96,7 +91,6 @@ namespace WCellAddon.IRCAddon
                     }
                 }
             };
-            return true;
         }
 
         /// <summary>
@@ -128,7 +122,7 @@ namespace WCellAddon.IRCAddon
         }
 
         /// <summary>
-        /// Returns the stats of the vote and disposes of the vote
+        /// Starts the cleanup process
         /// </summary>
         /// <param name="vote"></param>
         /// <returns></returns>
@@ -137,11 +131,21 @@ namespace WCellAddon.IRCAddon
             vote.Dispose();
         }
 
+        /// <summary>
+        /// Gets the stats of the vote. Usually called any time you want to display vote information
+        /// </summary>
+        /// <param name="vote"></param>
+        /// <returns>Returns total/positive/negative votes</returns>
         public string Stats(Vote vote)
         {
             return "There are a total of '" + vote.TotalVotes + "' votes, '" + vote.PositiveCount + "' positive, '" + vote.NegativeCount + "' negative. ";
         }
 
+        /// <summary>
+        /// Gets the result of the vote. Usually called after a vote has ended
+        /// </summary>
+        /// <param name="vote"></param>
+        /// <returns>Returns a string of the result depending on the outcome</returns>
         public string Result(Vote vote)
         {
             if (vote.PositiveCount > vote.NegativeCount)

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Squishy.Irc;
 using WCell.RealmServer;
 using WCell.RealmServer.Formulas;
@@ -170,7 +171,7 @@ namespace WCellAddon.IRCAddon.Commands
 
             if (chan != null)
             {
-                if (VoteMgr.ChannelVotes.ContainsKey(chan))
+                if (VoteMgr.Votes.ContainsKey(chan))
                 {
                     trigger.Reply("There is already an active vote on this channel");
                     return;
@@ -207,24 +208,33 @@ namespace WCellAddon.IRCAddon.Commands
         public override void Process(CmdTrigger trigger)
         {
             var chan = trigger.Channel;
-            var voteName = trigger.Args.Remainder;
+            var voteChan = trigger.Args.NextWord();
+            Vote vote;
 
-            if (VoteMgr.ChannelVotes.ContainsKey(chan) && voteName != "")
+            // If we have a channel given in the argument list
+            if (voteChan.Length > 0)
+                vote = Vote.GetVote(trigger.Irc.GetChannel(voteChan));
+            vote = Vote.GetVote(chan);
+
+            if (vote != null)
             {
-                var vote = Vote.GetVote(voteName);
+                
                 trigger.Reply("The vote has ended!");
                 trigger.Reply(VoteMgr.Mgr.Stats(vote));
                 trigger.Reply(VoteMgr.Mgr.Result(vote));
+                VoteMgr.Mgr.EndVote(vote);
+                return;
 
             }
+
 
             else
             {
                 Vote[] votesArray = new Vote[VoteMgr.Votes.Values.Count];
                 VoteMgr.Votes.Values.CopyTo(votesArray, 0);
-                foreach (var vote in votesArray)
-                    VoteMgr.Mgr.EndVote(vote);
-                trigger.Reply("Disposed of {0} votes.", votesArray.Length);
+                foreach (var vte in votesArray)
+                    VoteMgr.Mgr.EndVote(vte);
+                trigger.Reply("Disposed of {0} vote[s].", votesArray.Length);
             }
         }
     }
@@ -242,15 +252,16 @@ namespace WCellAddon.IRCAddon.Commands
         public override void Process(CmdTrigger trigger)
         {
             var chan = trigger.Channel;
-            var voteName = trigger.Args.Remainder;
-
-            if (VoteMgr.ChannelVotes.ContainsKey(chan) && voteName != "")
+            var vote = Vote.GetVote(chan);
+            if (vote != null)
             {
-                Vote vote;
-                VoteMgr.ChannelVotes.TryGetValue(chan, out vote);
-                trigger.Reply("There are a total of '{0}' votes, '{1}' positive, '{2}' negative", vote.TotalVotes, vote.PositiveCount, vote.NegativeCount);
-                trigger.Reply("Vote has ran for {0}", vote.RunTime);
+                trigger.Reply("Current vote: \"{0}\"", vote.VoteQuestion);
+                trigger.Reply("There are a total of '{0}' votes, '{1}' positive, '{2}' negative.", vote.TotalVotes, vote.PositiveCount, vote.NegativeCount);
+                trigger.Reply("The vote has ran for {0}.", vote.RunTimeString);
+                return;
             }
+
+            trigger.Reply("This channel has no open votes.");
         }
     }
     #endregion
