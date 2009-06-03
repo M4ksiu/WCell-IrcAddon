@@ -10,6 +10,7 @@ using System.Threading;
 using Squishy.Irc;
 using Squishy.Irc.Commands;
 using Squishy.Irc.Protocol;
+using Squishy.Network;
 using WCell.Constants;
 using WCell.Core.Initialization;
 using WCell.RealmServer;
@@ -74,7 +75,7 @@ namespace WCellAddon.IRCAddon
 
 
         /// <summary>
-        /// The Main method. Connects and loads all For reconnecting use Connect()
+        /// The Main method. Connects and loads all. For reconnecting use Connect()
         /// </summary>
         [Initialization(InitializationPass.Last, "Initializing IrcAddon")]
         public static void InitIrc()
@@ -496,8 +497,8 @@ namespace WCellAddon.IRCAddon
 
         private void MaintainCallback(object state)
         {
-            if (!LoggedIn)
-                InitIrc();
+            if (!LoggedIn && !Client.IsConnecting)
+                Connect();
         }
 
         /// <summary>

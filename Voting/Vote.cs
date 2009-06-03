@@ -159,7 +159,7 @@ namespace WCellAddon.IRCAddon.Voting
         /// Returns the vote question
         /// </summary>
         /// <returns></returns>
-        public string ToString()
+        public override string ToString()
         {
             return VoteQuestion;
         }
