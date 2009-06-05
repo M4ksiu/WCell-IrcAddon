@@ -34,7 +34,7 @@ namespace WCellAddon.IRCAddon
         public static bool HideIncomingIrcPackets = false;
         public static bool HideOutgoingIrcPackets = false;
         public static bool ReConnectOnDisconnect = true;
-        public static int ReConnectWaitTimer = 5;
+        public static int ReConnectWaitTimer = 50;
         public static bool ReJoinOnKick = true;
         public static string WCellCmdPrefix = "#";
         public static bool AuthAllUsersOnJoin = false;
