@@ -16,7 +16,7 @@ using WCell.Core.Initialization;
 using WCell.RealmServer;
 using WCell.Util.NLog;
 using WCell.Util;
-using StringStream=Squishy.Network.StringStream;
+using StringStream = Squishy.Network.StringStream;
 
 
 namespace WCellAddon.IRCAddon
@@ -34,7 +34,8 @@ namespace WCellAddon.IRCAddon
         public static bool HideIncomingIrcPackets = false;
         public static bool HideOutgoingIrcPackets = false;
         public static bool ReConnectOnDisconnect = true;
-        public static int ReConnectWaitTimer = 50;
+        public static int ReConnectWaitTime = 50;
+        public static int ReConnectAttempts = 100;  // If 0, attempts won't be limited
         public static bool ReJoinOnKick = true;
         public static string WCellCmdPrefix = "#";
         public static bool AuthAllUsersOnJoin = false;
@@ -56,6 +57,7 @@ namespace WCellAddon.IRCAddon
         //Every channel the bot has joined
         private HashSet<string> watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private Timer m_maintainConnTimer;
+        private int m_reConnectAttempts = 0;
 
         #endregion
 
@@ -75,7 +77,7 @@ namespace WCellAddon.IRCAddon
 
 
         /// <summary>
-        /// The Main method. Connects and loads all. For reconnecting use Connect()
+        /// The Main method. Connects and loads all necessary components. For reconnecting use Reconnect()
         /// </summary>
         [Initialization(InitializationPass.Last, "Initializing IrcAddon")]
         public static void InitIrc()
@@ -88,15 +90,6 @@ namespace WCellAddon.IRCAddon
 
             AccountAssociationsList.LoadDictionary(AccountAssociationsList.AccountAssociationFileName);
 
-            Connect();
-        }
-
-        /// <summary>
-        /// Method to connect to the irc network
-        /// </summary>
-        public static void Connect()
-        {
-            
             try
             {
                 var client = new IrcConnection
@@ -117,6 +110,14 @@ namespace WCellAddon.IRCAddon
         }
 
         /// <summary>
+        /// Method to reconnect to the irc network
+        /// </summary>
+        public void Reconnect()
+        {
+            Client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
+        }
+
+        /// <summary>
         /// Fires when the Client is fully logged on the network and the End of Motd is sent (raw 376).
         /// Initializes command and auth handler
         /// </summary>
@@ -133,8 +134,6 @@ namespace WCellAddon.IRCAddon
 
             IrcCommandHandler.Initialize();
             WCellUtil.Init(this);
-
-            m_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
         public void OnShutdown()
@@ -175,6 +174,12 @@ namespace WCellAddon.IRCAddon
         protected override void OnConnected()
         {
             Console.WriteLine("Connected to {0}:{1} ...", Client.RemoteAddress, Client.RemotePort);
+
+            // If we achieve a connection, we don't want the timer to tick 
+            m_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+            // We set the attempts back to 0 for the next time we lose connection.
+            m_reConnectAttempts = 0;
         }
 
         protected void OnReceive(IrcPacket packet)
@@ -196,17 +201,9 @@ namespace WCellAddon.IRCAddon
         protected override void OnConnectFail(Exception ex)
         {
             Console.WriteLine("Connection failed: " + ex);
-            Console.WriteLine("Trying to reconnect in {0}", ReConnectWaitTimer);
-            StartReConnectTimer();
-        }
+            Console.WriteLine("Trying to reconnect in {0}", ReConnectWaitTime);
 
-        /// <summary>
-        /// Starts the reconnect timer
-        /// </summary>
-        private void StartReConnectTimer()
-        {
-            Client.Disconnect();
-            m_maintainConnTimer.Change(0, ReConnectWaitTimer*1000);
+            StartReConnectTimer();
         }
 
         protected override void OnDisconnected(bool conLost)
@@ -221,6 +218,32 @@ namespace WCellAddon.IRCAddon
         protected override void OnExceptionRaised(Exception e)
         {
             Console.WriteLine(e);
+        }
+
+        /// <summary>
+        /// Starts the reconnect timer. Checks whether the timer will be triggered
+        /// </summary>
+        private void StartReConnectTimer()
+        {
+            if (ReConnectAttempts != 0)
+            {
+                // We only want to try reconnect as many times the user defines
+                if (m_reConnectAttempts++ <= ReConnectAttempts)
+                {
+                    if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
+                        m_maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
+                }
+                // Stop trying to reconnect if we've reached our user defined treshhold
+                else
+                    m_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
+
+            // If 0, there is no limit to reconnects
+            else
+            {
+                if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
+                    m_maintainConnTimer.Change(ReConnectWaitTime*1000, 0);
+            }
         }
 
         #endregion
@@ -331,7 +354,8 @@ namespace WCellAddon.IRCAddon
             else
             {
                 Console.WriteLine("{0} changed topic in channel {1} to: {2}", user.Nick, chan.Name, text);
-                UpdateTopic(chan, text);
+                if (user != Me)
+                    UpdateTopic(chan, text);
             }
         }
 
@@ -344,7 +368,7 @@ namespace WCellAddon.IRCAddon
             }
             if (user.IsAuthenticated && text.String.StartsWith(WCellCmdPrefix) && uArgs != null)
             {
-                WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan,
+                WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan,
                                         text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
             }
         }
@@ -452,7 +476,7 @@ namespace WCellAddon.IRCAddon
         protected override void OnCommandFail(CmdTrigger trigger, Exception ex)
         {
             Command cmd = trigger.Command;
-            string[] lines = ex.ToString().Split(new[] {"\r\n|\n|\r"}, StringSplitOptions.RemoveEmptyEntries);
+            string[] lines = ex.ToString().Split(new[] { "\r\n|\n|\r" }, StringSplitOptions.RemoveEmptyEntries);
 
             trigger.Reply("Exception raised: " + lines[0]);
             for (int i = 1; i < lines.Length; i++)
@@ -497,8 +521,9 @@ namespace WCellAddon.IRCAddon
 
         private void MaintainCallback(object state)
         {
-            if (!LoggedIn && !Client.IsConnecting)
-                Connect();
+                // We don't want to connect multiple times
+                if (!LoggedIn && !Client.IsConnecting)
+                    Reconnect();
         }
 
         /// <summary>
@@ -534,11 +559,11 @@ namespace WCellAddon.IRCAddon
 
             switch (IrcCmdCallingRange)
             {
-                    // Allow to call commands on any target channel
+                // Allow to call commands on any target channel
                 case IrcCmdCallingRange.Everywhere:
                     return true;
 
-                    // Allow to call commands if the commands does not contain the channel argument
+                // Allow to call commands if the commands does not contain the channel argument
                 case IrcCmdCallingRange.IsPrivilegedOnTrgt:
                     if (!trigger.Text.Contains("#"))
                         return true;
