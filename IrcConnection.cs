@@ -125,10 +125,13 @@ namespace WCellAddon.IRCAddon
         {
             foreach (var channel in IrcAddonConfig.ChannelList)
             {
-                watchedChannels.Add(channel);
-                foreach (var chan in watchedChannels)
+                if (channel.Value != "" && channel.Value != "ChannelKey")
                 {
-                    CommandHandler.Join(chan);
+                    CommandHandler.Join(channel.Key, channel.Value);
+                }
+                else
+                {
+                    CommandHandler.Join(channel.Key);
                 }
             }
 
@@ -140,28 +143,24 @@ namespace WCellAddon.IRCAddon
         {
             if (Client.IsConnected)
             {
-                IrcChannel chan = GetChannel(IrcAddonConfig.ChannelList[0]);
-                UpdateTopic(chan, chan.Topic);
+                UpdateImportantChannels();
             }
             Client.Disconnect();
         }
 
         private void OnStatusNameChange(RealmStatus status)
         {
-            IrcChannel chan = GetChannel(IrcAddonConfig.ChannelList[0]);
-            UpdateTopic(chan, chan.Topic);
+            UpdateImportantChannels();
         }
 
         private void AuthClientDisconnected(object sender, EventArgs e)
         {
-            IrcChannel chan = GetChannel(IrcAddonConfig.ChannelList[0]);
-            UpdateTopic(chan);
+            UpdateImportantChannels();
         }
 
         private void AuthClientConnected(object sender, EventArgs e)
         {
-            IrcChannel chan = GetChannel(IrcAddonConfig.ChannelList[0]);
-            UpdateTopic(chan);
+            UpdateImportantChannels();
         }
 
         #region OnConnecting/OnDisconnected/Packets/OnIrcExceptionRaised
@@ -242,7 +241,7 @@ namespace WCellAddon.IRCAddon
             else
             {
                 if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-                    m_maintainConnTimer.Change(ReConnectWaitTime*1000, 0);
+                    m_maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
             }
         }
 
@@ -278,6 +277,10 @@ namespace WCellAddon.IRCAddon
         {
             base.OnUserLeftChannel(chan, user, reason);
             Console.WriteLine("**{0} quit({1})", user.Nick, reason);
+            if(user == Me)
+            {
+                watchedChannels.Remove(chan.Name);
+            }
         }
 
         protected override void OnJoin(IrcUser user, IrcChannel chan)
@@ -307,13 +310,16 @@ namespace WCellAddon.IRCAddon
         {
             Console.WriteLine("Topic was set {0} by {1}", chan.TopicSetTime, chan.TopicSetter);
             Console.WriteLine("Topic is: {0}", chan.Topic);
-
-            //Only set the topic of the first channel
-            if (chan.Name == IrcAddonConfig.ChannelList[0])
+            if (IrcAddonConfig.UpdatedChannels.Length != 0)
             {
-                UpdateTopic(chan, chan.Topic);
+                foreach (var channel in IrcAddonConfig.UpdatedChannels)
+                {
+                    if (chan.Name == channel)
+                    {
+                        UpdateTopic(chan, chan.Topic);
+                    }
+                }
             }
-
             if (AutoAuth)
             {
                 if (AuthAllUsersOnJoin)
@@ -521,9 +527,9 @@ namespace WCellAddon.IRCAddon
 
         private void MaintainCallback(object state)
         {
-                // We don't want to connect multiple times
-                if (!LoggedIn && !Client.IsConnecting)
-                    Reconnect();
+            // We don't want to connect multiple times
+            if (!LoggedIn && !Client.IsConnecting)
+                Reconnect();
         }
 
         /// <summary>
@@ -607,6 +613,21 @@ namespace WCellAddon.IRCAddon
                     break;
             }
             return false;
+        }
+
+        private void UpdateImportantChannels()
+        {
+            if (IrcAddonConfig.UpdatedChannels.Length != 0)
+            {
+                foreach (var chan in IrcAddonConfig.UpdatedChannels)
+                {
+                    if (watchedChannels.Contains(chan))
+                    {
+                        var channel = GetChannel(chan);
+                        UpdateTopic(channel, channel.Topic);
+                    }
+                }
+            }
         }
 
         /// <summary>

@@ -1,12 +1,14 @@
-﻿using Squishy.Irc;
+﻿using System.Collections.Generic;
+using Squishy.Irc;
 
 namespace WCellAddon.IRCAddon
 {
     public class IrcAddonConfig
     {
-        public static string[] ChannelList = new[] {"#ChangeMe"};
-                               //All the channels you want the client to connect to.
-
+        public static Dictionary<string,string> ChannelList = new Dictionary<string, string>{{"#ChannelName", "ChannelKey"}};
+                               //All the channels you want the client to connect to, key being the channel's key.
+                               //If the key is empty (""), it will presume there is no key.
+        public static string[] UpdatedChannels = {"#ChannelName"};
         public static string Info = "ChangeMe";
         public static string Network = "euroserv.fr.quakenet.org"; //The network the client will connect to.
         public static string[] Nicks = new[] {"Mokbot", "Mokbot2"}; //The nicks the client will try and use.
