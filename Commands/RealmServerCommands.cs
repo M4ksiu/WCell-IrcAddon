@@ -1,4 +1,4 @@
-﻿using Squishy.Irc.Commands;
+﻿using Squishy.Irc;
 using Squishy.Irc.Protocol;
 using WCell.Constants.Factions;
 using WCell.Core;
@@ -149,11 +149,11 @@ namespace WCellAddon.IRCAddon.Commands
         public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
         {
             string alias = trigger.Text.NextWord();
-            var cmds = CommandHandler.Instance.Commands;
+            var cmds = RealmCommandHandler.Instance.Commands;
 
             if(alias.Length > 0)
             {
-                var matches = CommandHandler.Instance.GetCommands(alias);
+                var matches = RealmCommandHandler.Instance.GetCommands(alias);
                 if(matches == null)
                 {
                     trigger.Reply("Command '{0}' does not exist", alias);

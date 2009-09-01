@@ -1,7 +1,9 @@
-﻿using WCell.RealmServer;
+﻿using System;
+using WCell.RealmServer;
 using WCell.RealmServer.Commands;
 using WCell.Intercommunication.DataTypes;
 using Squishy.Irc;
+using WCell.Util.Commands;
 using WCellAddon.IRCAddon.Commands;
 using WCellStr = WCell.Util.StringStream;
 using IrcStr = Squishy.Network.StringStream;
@@ -82,12 +84,20 @@ namespace WCellAddon.IRCAddon
                     // init the trigger and check if the given args are valid
                     if (trigger.InitTrigger())
                     {
-                        return CommandHandler.Instance.Execute(trigger);
+                        RealmCommandHandler.Instance.ExecuteInContext(trigger, false, OnExecuted, OnFail);
                     }
                     return true;
                 }
             }
             return false;
+        }
+
+        private static void OnExecuted(CmdTrigger<RealmServerCmdArgs> obj)
+        {
+        }
+
+        private static void OnFail(CmdTrigger<RealmServerCmdArgs> obj)
+        {
         }
     }
 }
