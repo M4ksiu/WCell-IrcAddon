@@ -96,8 +96,14 @@
     <Reference Include="log4net, Version=1.2.9.0, Culture=neutral, PublicKeyToken=a5715cc6d5c3540b">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Squishy.Irc, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Squishy.Network, Version=1.0.3355.36838, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Squishy.Irc, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\Squishy.Irc.dll</HintPath>
+    </Reference>
+    <Reference Include="Squishy.Network, Version=1.0.3430.33342, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\Squishy.Network.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>

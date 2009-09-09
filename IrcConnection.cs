@@ -73,6 +73,15 @@ namespace WCellAddon.IRCAddon
             RealmServer.Instance.StatusChanged += OnStatusNameChange;
             m_maintainConnTimer = new Timer(MaintainCallback);
             LogUtil.ExceptionRaised += LogUtilExceptionRaised;
+            Client.Disconnected += Client_Disconnected;
+        }
+
+        void Client_Disconnected(Connection con, bool connectionLost)
+        {
+            if(connectionLost && ReConnectOnDisconnect)
+            {
+                StartReConnectTimer();
+            }
         }
 
 
@@ -208,10 +217,6 @@ namespace WCellAddon.IRCAddon
         protected override void OnDisconnected(bool conLost)
         {
             Console.WriteLine("Disconnected" + (conLost ? " (Connection lost)" : ""));
-            if (conLost && ReConnectOnDisconnect)
-            {
-                StartReConnectTimer();
-            }
         }
 
         protected override void OnExceptionRaised(Exception e)
