@@ -55,7 +55,7 @@ namespace WCellAddon.IRCAddon.Voting
         /// </summary>
         public TimeSpan RunTime
         {
-            get { return m_CreationTime.Subtract(DateTime.Now); }
+            get { return DateTime.Now.Subtract(m_CreationTime); }
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace WCellAddon.IRCAddon.Voting
         {
             get
             {
-                return (Math.Abs(RunTime.Days) + " Days, " + Math.Abs(RunTime.Hours) + " Hours, " + Math.Abs(RunTime.Minutes) + " Minutes, " +
-                               Math.Abs(RunTime.Seconds) + " Seconds");
+                return (RunTime.Days + " Days, " + RunTime.Hours + " Hours, " + RunTime.Minutes + " Minutes, " +
+                               RunTime.Seconds + " Seconds");
             }
         }
 

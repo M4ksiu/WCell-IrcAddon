@@ -100,7 +100,7 @@ namespace WCellAddon.IRCAddon
 
         #region Implementation of IUser
 
-        public bool Ignores(IUser user)
+        public bool IsIgnoring(IUser user)
         {
             return false;
         }
