@@ -14,6 +14,7 @@ using Squishy.Network;
 using WCell.Constants;
 using WCell.Core.Initialization;
 using WCell.RealmServer;
+using WCell.RealmServer.Global;
 using WCell.Util.NLog;
 using WCell.Util;
 using StringStream = Squishy.Network.StringStream;
@@ -43,6 +44,9 @@ namespace WCellAddon.IRCAddon
         public static IrcCmdCallingRange IrcCmdCallingRange = IrcCmdCallingRange.LocalChannel;
         public static int ExceptionNotificationRank = 1000;
         public static bool ExceptionNotify = true;
+        public static bool ExceptionChannelNotification = false;
+        public static bool ExceptionNotifyStaffUsers = true;
+        public static bool EchoBroadcasts = true;
         //public static char IrcCmdPrefix = CommandHandler.RemoteCommandPrefix;
         public static int SendQueue
         {
@@ -55,9 +59,10 @@ namespace WCellAddon.IRCAddon
         #region Private Fields
 
         //Every channel the bot has joined
-        private HashSet<string> watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-        private Timer m_maintainConnTimer;
-        private int m_reConnectAttempts = 0;
+        private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        private Timer _maintainConnTimer;
+        private int _reConnectAttempts = 0;
+        private string _exceptionChan;
 
         #endregion
 
@@ -71,9 +76,21 @@ namespace WCellAddon.IRCAddon
             ProtocolHandler.PacketReceived += OnReceive;
             RealmServer.Shutdown += OnShutdown;
             RealmServer.Instance.StatusChanged += OnStatusNameChange;
-            m_maintainConnTimer = new Timer(MaintainCallback);
+            World.Broadcasted += World_Broadcasted;
+            _maintainConnTimer = new Timer(MaintainCallback);
             LogUtil.ExceptionRaised += LogUtilExceptionRaised;
             Client.Disconnected += Client_Disconnected;
+        }
+
+        void World_Broadcasted(WCell.RealmServer.Chat.IChatter sender, string arg2)
+        {
+            if (EchoBroadcasts)
+            {
+                foreach (var chan in IrcAddonConfig.UpdatedChannels)
+                {
+                    GetChannel(chan).Msg(sender.Name + ": " + arg2);
+                }
+            }
         }
 
         void Client_Disconnected(Connection con, bool connectionLost)
@@ -144,6 +161,33 @@ namespace WCellAddon.IRCAddon
                 }
             }
 
+            // We want the bot to join each channel that the user wants updated,
+            // just in case s/he forgot to put them on ChannelList
+            foreach(var chan in IrcAddonConfig.UpdatedChannels)
+            {
+                if(!Channels.Keys.Contains(chan))
+                {
+                    CommandHandler.Join(chan);
+                }
+            }
+
+            // Apparently the user is using an exception channel.
+            if(ExceptionChannelNotification)
+            {
+                foreach (var channel in IrcAddonConfig.ExceptionChan)
+                {
+                    if (channel.Value != "" && channel.Value != "ChannelKey")
+                    {
+                        CommandHandler.Join(channel.Key, channel.Value);
+                    }
+                    else
+                    {
+                        CommandHandler.Join(channel.Key);
+                    }
+                    _exceptionChan = channel.Key;
+                }
+            }
+
             IrcCommandHandler.Initialize();
             WCellUtil.Init(this);
         }
@@ -184,10 +228,10 @@ namespace WCellAddon.IRCAddon
             Console.WriteLine("Connected to {0}:{1} ...", Client.RemoteAddress, Client.RemotePort);
 
             // If we achieve a connection, we don't want the timer to tick 
-            m_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            _maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
             // We set the attempts back to 0 for the next time we lose connection.
-            m_reConnectAttempts = 0;
+            _reConnectAttempts = 0;
         }
 
         protected void OnReceive(IrcPacket packet)
@@ -232,21 +276,21 @@ namespace WCellAddon.IRCAddon
             if (ReConnectAttempts != 0)
             {
                 // We only want to try reconnect as many times the user defines
-                if (m_reConnectAttempts++ <= ReConnectAttempts)
+                if (_reConnectAttempts++ <= ReConnectAttempts)
                 {
                     if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-                        m_maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
+                        _maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
                 }
                 // Stop trying to reconnect if we've reached our user defined treshhold
                 else
-                    m_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    _maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
             }
 
             // If 0, there is no limit to reconnects
             else
             {
                 if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-                    m_maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
+                    _maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
             }
         }
 
@@ -284,16 +328,16 @@ namespace WCellAddon.IRCAddon
             Console.WriteLine("**{0} quit({1})", user.Nick, reason);
             if(user == Me)
             {
-                watchedChannels.Remove(chan.Name);
+                _watchedChannels.Remove(chan.Name);
             }
         }
 
         protected override void OnJoin(IrcUser user, IrcChannel chan)
         {
-            //If the bot joins a channel, it will add that chan to watchedChannels
+            //If the bot joins a channel, it will add that chan to _watchedChannels
             if (user == Me)
             {
-                watchedChannels.Add(chan.Name);
+                _watchedChannels.Add(chan.Name);
             }
 
             //Try and auth the joined user
@@ -407,7 +451,7 @@ namespace WCellAddon.IRCAddon
             {
                 if (uArgs == null)
                 {
-                    if (watchedChannels.Contains(chan.Name) &&
+                    if (_watchedChannels.Contains(chan.Name) &&
                         chan.IsUserAtLeast(trigger.User, IrcAddonConfig.RequiredStaffPriv))
                     {
                         return CheckCmdCallingRange(trigger, chan);
@@ -423,7 +467,7 @@ namespace WCellAddon.IRCAddon
             {
                 if (uArgs == null)
                 {
-                    if (watchedChannels.Contains(userChan.Name) &&
+                    if (_watchedChannels.Contains(userChan.Name) &&
                         (userChan.IsUserAtLeast(trigger.User, IrcAddonConfig.RequiredStaffPriv)))
                         return true;
 
@@ -511,21 +555,29 @@ namespace WCellAddon.IRCAddon
         {
             if (ExceptionNotify)
             {
-                foreach (IrcUser user in Users.Values)
+                if (ExceptionNotifyStaffUsers)
                 {
-                    if (user.IsAuthenticated)
+                    foreach (IrcUser user in Users.Values)
                     {
-                        var uArgs = user.Args as WCellArgs;
-                        if (uArgs != null)
+                        if (user.IsAuthenticated)
                         {
-                            if (uArgs.Account.Role >= ExceptionNotificationRank)
+                            var uArgs = user.Args as WCellArgs;
+                            if (uArgs != null)
                             {
-                                user.Msg(text);
-                                foreach (var line in exception.GetAllMessages())
-                                    user.Msg(line);
+                                if (uArgs.Account.Role >= ExceptionNotificationRank)
+                                {
+                                    user.Msg(text);
+                                    foreach (var line in exception.GetAllMessages())
+                                        user.Msg(line);
+                                }
                             }
                         }
                     }
+                }
+
+                if(ExceptionChannelNotification)
+                {
+                    GetChannel(_exceptionChan).Msg(text);
                 }
             }
         }
@@ -626,7 +678,7 @@ namespace WCellAddon.IRCAddon
             {
                 foreach (var chan in IrcAddonConfig.UpdatedChannels)
                 {
-                    if (watchedChannels.Contains(chan))
+                    if (_watchedChannels.Contains(chan))
                     {
                         var channel = GetChannel(chan);
                         UpdateTopic(channel, channel.Topic);
