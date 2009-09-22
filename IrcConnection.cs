@@ -564,7 +564,7 @@ namespace WCellAddon.IRCAddon
                             var uArgs = user.Args as WCellArgs;
                             if (uArgs != null)
                             {
-                                if (uArgs.Account.Role >= ExceptionNotificationRank)
+                                if (uArgs.Account.Role >= ExceptionNotificationRank && uArgs.AcceptExceptionEchos)
                                 {
                                     user.Msg(text);
                                     foreach (var line in exception.GetAllMessages())

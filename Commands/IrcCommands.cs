@@ -266,5 +266,85 @@ namespace WCellAddon.IRCAddon.Commands
     }
     #endregion
 
+    #region ToggleExceptionNotification
+
+    public class ToggleExcNotificationCommand : Command
+    {
+        public ToggleExcNotificationCommand()
+            : base("ToggleExcNot", "TogExc", "TEN")
+        {
+            Usage = "TEN [1/0]";
+            Description = "Command to toggle whether the user accepts exception notifications or not";
+        }
+
+        public override void Process(CmdTrigger trigger)
+        {
+            var uArgs = trigger.User.Args as WCellArgs;
+            var ans = trigger.Args.NextInt();
+            if(uArgs != null)
+            {
+                if(ans == -1)
+                {
+                    if (uArgs.AcceptExceptionEchos)
+                    {
+                        uArgs.AcceptExceptionEchos = false;
+                        return;
+                    }
+                    uArgs.AcceptExceptionEchos = true;
+                    return;
+                }
+                if(ans == 0)
+                {
+                    uArgs.AcceptExceptionEchos = false;
+                    return;
+                }
+                if(ans > 0)
+                {
+                    uArgs.AcceptExceptionEchos = true;
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region ResyncAuth
+
+    public class ResyncAuthCommand : Command
+    {
+        public ResyncAuthCommand()
+            : base("ResyncAuth", "RA")
+        {
+            Usage = "ResyncAuth [-a (all]";
+            Description = "Command to resync your (or everybody's authentication information)";
+        }
+
+        public override void Process(CmdTrigger trigger)
+        {
+            var usr = trigger.User;
+            var mod = trigger.Args.NextWord();
+            var authMgr = trigger.Irc.AuthMgr;
+
+            if(trigger.Text.Trim().Length == 0 && usr.IsAuthenticated)
+            {
+                usr.Args = null;
+                authMgr.ResolveAuth(usr);
+            }
+
+            if(mod != null)
+            {
+                foreach(var user in trigger.Irc.Users)
+                {
+                    if(user.Value.IsAuthenticated)
+                    {
+                        user.Value.Args = null;
+                        authMgr.ResolveAuth(user.Value);
+                    }
+                }
+            }
+        }
+    }
+
+    #endregion
     #endregion
 }

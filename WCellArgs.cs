@@ -22,10 +22,13 @@ namespace WCellAddon.IRCAddon
                 throw new NullReferenceException("account");
             }
             Account = account;
+            AcceptExceptionEchos = true;
         }
 
         public RealmAccount Account { get; set; }
 
         public RealmServerCmdArgs CmdArgs { get; set; }
+
+        public bool AcceptExceptionEchos { get; set; }
     }
 }
