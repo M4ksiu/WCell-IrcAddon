@@ -519,8 +519,8 @@ namespace WCellAddon.IRCAddon
 
         protected override void OnUnknownCommandUsed(CmdTrigger trigger)
         {
-            trigger.Reply("Command-Alias not found: " + trigger.Alias);
-            base.OnUnknownCommandUsed(trigger);
+            //trigger.Reply("Command-Alias not found: " + trigger.Alias);
+            //base.OnUnknownCommandUsed(trigger);
         }
 
         /// <summary>

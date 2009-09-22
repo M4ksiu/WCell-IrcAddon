@@ -302,6 +302,7 @@ namespace WCellAddon.IRCAddon.Commands
                 {
                     uArgs.AcceptExceptionEchos = true;
                 }
+                trigger.Reply("Exception echoing to user " + trigger.User.Nick + ": " + uArgs.AcceptExceptionEchos);
             }
         }
     }
