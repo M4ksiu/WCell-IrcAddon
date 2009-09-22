@@ -273,7 +273,7 @@ namespace WCellAddon.IRCAddon.Commands
         public ToggleExcNotificationCommand()
             : base("ToggleExcNot", "TogExc", "TEN")
         {
-            Usage = "TEN [1/0]";
+            Usage = "ToggleExcNotification [1/0]";
             Description = "Command to toggle whether the user accepts exception notifications or not";
         }
 
@@ -288,9 +288,11 @@ namespace WCellAddon.IRCAddon.Commands
                     if (uArgs.AcceptExceptionEchos)
                     {
                         uArgs.AcceptExceptionEchos = false;
+                        trigger.Reply("Exception echoing to user " + trigger.User.Nick + ": " + uArgs.AcceptExceptionEchos);
                         return;
                     }
                     uArgs.AcceptExceptionEchos = true;
+                    trigger.Reply("Exception echoing to user " + trigger.User.Nick + ": " + uArgs.AcceptExceptionEchos);
                     return;
                 }
                 if(ans == 0)
@@ -304,6 +306,7 @@ namespace WCellAddon.IRCAddon.Commands
                 }
                 trigger.Reply("Exception echoing to user " + trigger.User.Nick + ": " + uArgs.AcceptExceptionEchos);
             }
+            trigger.Reply("User is not matched to a server account.");
         }
     }
 

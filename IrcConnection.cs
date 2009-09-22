@@ -14,6 +14,7 @@ using Squishy.Network;
 using WCell.Constants;
 using WCell.Core.Initialization;
 using WCell.RealmServer;
+using WCell.RealmServer.Chat;
 using WCell.RealmServer.Global;
 using WCell.Util.NLog;
 using WCell.Util;
@@ -82,13 +83,20 @@ namespace WCellAddon.IRCAddon
             Client.Disconnected += Client_Disconnected;
         }
 
-        void World_Broadcasted(WCell.RealmServer.Chat.IChatter sender, string arg2)
+        void World_Broadcasted(IChatter sender, string message)
         {
             if (EchoBroadcasts)
             {
                 foreach (var chan in IrcAddonConfig.UpdatedChannels)
                 {
-                    GetChannel(chan).Msg(sender.Name + ": " + arg2);
+                    if(sender != null)
+                    {
+                        GetChannel(chan).Msg(sender.Name + ": " + ChatUtility.Strip(message));
+                    }
+                    else
+                    {
+                        GetChannel(chan).Msg(ChatUtility.Strip(message));
+                    }
                 }
             }
         }
