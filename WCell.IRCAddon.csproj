@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WCellAddon.IRCAddon</RootNamespace>
-    <AssemblyName>WCell.IRCAddon</AssemblyName>
+    <AssemblyName>IRCAddon</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>

@@ -298,6 +298,7 @@ namespace WCellAddon.IRCAddon.Commands
                 if(ans == 0)
                 {
                     uArgs.AcceptExceptionEchos = false;
+                    trigger.Reply("Exception echoing has been set to false.");
                     return;
                 }
                 if(ans > 0)
