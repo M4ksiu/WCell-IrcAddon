@@ -48,7 +48,7 @@ namespace WCellAddon.IRCAddon
         public static bool ExceptionChannelNotification = false;
         public static bool ExceptionNotifyStaffUsers = true;
         public static bool EchoBroadcasts = true;
-        //public static char IrcCmdPrefix = CommandHandler.RemoteCommandPrefix;
+        public static char IrcCmdPrefix = '%';
         public static int SendQueue
         {
             get { return ThrottledSendQueue.CharsPerSecond; }
@@ -58,7 +58,6 @@ namespace WCellAddon.IRCAddon
         #endregion
 
         #region Private Fields
-
         //Every channel the bot has joined
         private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private Timer _maintainConnTimer;
@@ -100,7 +99,6 @@ namespace WCellAddon.IRCAddon
                 }
             }
         }
-
         void Client_Disconnected(Connection con, bool connectionLost)
         {
             if(connectionLost && ReConnectOnDisconnect)
@@ -202,10 +200,6 @@ namespace WCellAddon.IRCAddon
 
         public void OnShutdown()
         {
-            if (Client.IsConnected)
-            {
-                UpdateImportantChannels();
-            }
             Client.Disconnect();
         }
 
@@ -425,6 +419,7 @@ namespace WCellAddon.IRCAddon
         protected override void OnText(IrcUser user, IrcChannel chan, StringStream text)
         {
             var uArgs = user.Args as WCellArgs;
+            CommandHandler.RemoteCommandPrefix = IrcCmdPrefix;
             if (HideChatting != true)
             {
                 Console.WriteLine("<{0}> {1}", user, text);
@@ -705,7 +700,7 @@ namespace WCellAddon.IRCAddon
         {
             if (chan != null)
             {
-                if (AutomaticTopicUpdating && chan.Topic != text)
+                if (AutomaticTopicUpdating)
                 {
                     if (text.Contains("Server status: "))
                     {

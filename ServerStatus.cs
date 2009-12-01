@@ -22,16 +22,18 @@ namespace WCellAddon.IRCAddon
 
         public static string GetStatusName()
         {
-            if (RealmServer.Instance.IsRunning && RealmServer.Instance.IsRunning
-                && !RealmServer.IsShuttingDown && RealmServer.Instance.AuthClient.IsConnected)
+            if (RealmServer.Instance.IsRunning && !RealmServer.IsShuttingDown && RealmServer.Instance.AuthClient.IsConnected)
             {
                 statusName = "Online".Colorize(OnlineColor);
             }
-            else
+            if (RealmServer.IsShuttingDown)
             {
                 statusName = "Offline".Colorize(OfflineColor);
             }
-
+            if (RealmServerConfiguration.Status.ToString() != statusName && WCell.RealmServer.RealmServerConfiguration.Status == WCell.Constants.RealmStatus.Locked && !RealmServer.IsShuttingDown)
+            {
+                statusName = "Locked".Colorize(LockedColor);
+            }
             return statusName;
         }
     }
