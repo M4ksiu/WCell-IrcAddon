@@ -6,17 +6,18 @@ namespace WCellAddon.IRCAddon
 {
     public class IrcAddonConfig
     {
-        public static Dictionary<string,string> ChannelList = new Dictionary<string, string>{{"#ChannelName", "ChannelKey"}};
-                               //All the channels you want the client to connect to, key being the channel's key.
-                               //If the key is empty (""), it will presume there is no key.
+        public static string[] ChannelList = {"#ChannelName,ChannelKey"};
+                                // Note: All the channels you want the client to connect to, key being the channel's key.
+                                // Note: If the key is empty (""), it will presume there is no key and connect normally
+                                // Note: Example 1) "#WCell," (will join the channel #WCell without a key)
+                                // NOTE: Example 2) "#WCell,password12" (will join the channel #WCell with the key "password12" (no spaces)
         /// <summary>
         /// Channels you want to keep updated according to the latest server status
         /// Broadcasts are also posted in these channels.
         /// </summary>
         public static string[] UpdatedChannels = {"#ChannelName"};
 
-        public static Dictionary<string, string> ExceptionChan = new Dictionary<string, string>(1)
-                                                                     {{"#ExceptionChannel", "ChannelKey"}};
+        public static string[] ExceptionChan = {"#ExceptionChannel,ChannelKey"};
         public static string Info = "ChangeMe";
         public static string Network = "euroserv.fr.quakenet.org"; //The network the client will connect to.
         public static string[] Nicks = new[] { RealmServerConfiguration.RealmName, RealmServerConfiguration.RealmName + "2", RealmServerConfiguration.RealmName + "3"}; //The nicks the client will try and use.

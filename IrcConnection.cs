@@ -18,6 +18,7 @@ using WCell.RealmServer.Chat;
 using WCell.RealmServer.Global;
 using WCell.Util.NLog;
 using WCell.Util;
+using WCellAddon.IRCAddon.Commands;
 using StringStream = Squishy.Network.StringStream;
 
 
@@ -39,7 +40,7 @@ namespace WCellAddon.IRCAddon
         public static int ReConnectWaitTime = 50;
         public static int ReConnectAttempts = 100;  // If 0, attempts won't be limited
         public static bool ReJoinOnKick = true;
-        public static string WCellCmdPrefix = "#";
+        
         public static bool AuthAllUsersOnJoin = false;
         public static bool UpdateTopicOnFlagAdded = true;
         public static IrcCmdCallingRange IrcCmdCallingRange = IrcCmdCallingRange.LocalChannel;
@@ -155,15 +156,18 @@ namespace WCellAddon.IRCAddon
         /// </summary>
         protected override void Perform()
         {
+            CommandHandler.Msg("Q@CServe.QuakeNet.org", "AUTH or whatever");
             foreach (var channel in IrcAddonConfig.ChannelList)
             {
-                if (channel.Value != "" && channel.Value != "ChannelKey")
+                var sbstr = channel.Split(',');
+                if (sbstr[1].Length != 0 && sbstr[1] != "ChannelKey")
                 {
-                    CommandHandler.Join(channel.Key, channel.Value);
+                    // The channel is passworded.
+                    CommandHandler.Join(sbstr[0], sbstr[1]);
                 }
                 else
                 {
-                    CommandHandler.Join(channel.Key);
+                    CommandHandler.Join(sbstr[0]);
                 }
             }
 
@@ -182,15 +186,17 @@ namespace WCellAddon.IRCAddon
             {
                 foreach (var channel in IrcAddonConfig.ExceptionChan)
                 {
-                    if (channel.Value != "" && channel.Value != "ChannelKey")
+                    var sbstr = channel.Split(',');
+                    if (sbstr[0].Length > 0 && sbstr[1].Length > 0 && sbstr[1] != "ChannelKey")
                     {
-                        CommandHandler.Join(channel.Key, channel.Value);
+                        // The channel is passworded.
+                        CommandHandler.Join(sbstr[0], sbstr[1]);
                     }
                     else
                     {
-                        CommandHandler.Join(channel.Key);
+                        CommandHandler.Join(sbstr[0]);
                     }
-                    _exceptionChan = channel.Key;
+                    _exceptionChan = sbstr[0];
                 }
             }
 
@@ -424,10 +430,10 @@ namespace WCellAddon.IRCAddon
             {
                 Console.WriteLine("<{0}> {1}", user, text);
             }
-            if (user.IsAuthenticated && text.String.StartsWith(WCellCmdPrefix) && uArgs != null)
+            if (user.IsAuthenticated && text.String.StartsWith(WCellCmdTrigger.WCellCmdPrefix) && uArgs != null)
             {
                 WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan,
-                                        text.String.TrimStart(WCellCmdPrefix.ToCharArray()));
+                                        text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
             }
         }
 
