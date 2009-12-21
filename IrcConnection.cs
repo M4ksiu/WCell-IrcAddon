@@ -49,7 +49,7 @@ namespace WCellAddon.IRCAddon
         public static bool ExceptionChannelNotification = false;
         public static bool ExceptionNotifyStaffUsers = true;
         public static bool EchoBroadcasts = true;
-        public static char IrcCmdPrefix = '%';
+        public static string IrcCmdPrefix = "%";
         public static int SendQueue
         {
             get { return ThrottledSendQueue.CharsPerSecond; }

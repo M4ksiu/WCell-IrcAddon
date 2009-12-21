@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Squishy.Irc;
 using WCell.Constants;
+using WCell.Constants.Misc;
 using WCell.Constants.Factions;
 using WCell.Core;
 using WCell.RealmServer;
