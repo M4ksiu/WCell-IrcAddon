@@ -156,10 +156,20 @@ namespace WCellAddon.IRCAddon
         /// </summary>
         protected override void Perform()
         {
-            CommandHandler.Msg("Q@CServe.QuakeNet.org", "AUTH or whatever");
+            //CommandHandler.Msg("Q@CServe.QuakeNet.org", "AUTH or whatever");
             foreach (var channel in IrcAddonConfig.ChannelList)
             {
                 var sbstr = channel.Split(',');
+
+                // Making sure the user has filled in the config correctly, or we will have errors.
+                if(sbstr.Length < 2)
+                {
+                    Client.DisconnectNow();
+                    Console.WriteLine("Disconnected. Check your configuration.");
+                    Console.WriteLine("The channel name must be followed by a comma:  {0},", sbstr);
+                    return;
+                }
+
                 if (sbstr[1].Length != 0 && sbstr[1] != "ChannelKey")
                 {
                     // The channel is passworded.
