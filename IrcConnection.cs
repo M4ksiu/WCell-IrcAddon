@@ -12,6 +12,7 @@ using Squishy.Irc.Commands;
 using Squishy.Irc.Protocol;
 using Squishy.Network;
 using WCell.Constants;
+using WCell.Constants.Login;
 using WCell.Core.Initialization;
 using WCell.RealmServer;
 using WCell.RealmServer.Chat;

@@ -1,4 +1,5 @@
-﻿using WCell.RealmServer.Commands;
+﻿using WCell.Constants.Updates;
+using WCell.RealmServer.Commands;
 using WCell.Intercommunication.DataTypes;
 using WCell.Constants;
 using WCell.Util.Commands;

@@ -1,4 +1,5 @@
 ﻿using Squishy.Irc;
+using WCell.Constants.Login;
 using WCell.RealmServer;
 
 namespace WCellAddon.IRCAddon
@@ -30,7 +31,7 @@ namespace WCellAddon.IRCAddon
             {
                 statusName = "Offline".Colorize(OfflineColor);
             }
-            if (RealmServerConfiguration.Status.ToString() != statusName && WCell.RealmServer.RealmServerConfiguration.Status == WCell.Constants.RealmStatus.Locked && !RealmServer.IsShuttingDown)
+            if (RealmServerConfiguration.Status.ToString() != statusName && RealmServerConfiguration.Status == RealmStatus.Locked && !RealmServer.IsShuttingDown)
             {
                 statusName = "Locked".Colorize(LockedColor);
             }

@@ -1,4 +1,5 @@
 ﻿using WCell.Constants.Factions;
+using WCell.Constants.Updates;
 using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;
 using WCell.Constants;
