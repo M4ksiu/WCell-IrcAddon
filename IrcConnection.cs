@@ -220,6 +220,8 @@ namespace IRCAddon
             IrcCommandHandler.Initialize();
             WCellUtil.Init(this);
 
+            AuthMgr.ResolveAuth(Me);
+
             if (IrcAddonConfig.PerformOnConnect)
             {
                 foreach (var method in IrcAddonConfig.PerformMethods)
@@ -376,15 +378,18 @@ namespace IRCAddon
 
         protected override void OnJoin(IrcUser user, IrcChannel chan)
         {
-            if(OnJoinCommands.ContainsKey(chan.Name))
+            if (user == Me)
             {
-                foreach(var method in OnJoinCommands[chan.Name])
+                if (OnJoinCommands.ContainsKey(chan.Name))
                 {
-                    var stream = new StringStream(method);
-                    // If it's a WCell command, it will be triggered in TriggersCommand
-                    if(TriggersCommand(user, chan, stream))
+                    foreach (var method in OnJoinCommands[chan.Name])
                     {
-                        CommandHandler.ReactTo(new ExecuteCmdTrigger(stream, Me, null));
+                        var stream = new StringStream(method);
+                        // If it's a WCell command, it will be triggered in TriggersCommand
+                        if (TriggersCommand(user, chan, stream))
+                        {
+                            CommandHandler.ReactTo(new ExecuteCmdTrigger(stream, Me, null));
+                        }
                     }
                 }
             }
@@ -397,11 +402,14 @@ namespace IRCAddon
             //Try and auth the joined user
             try
             {
-                if (AnnounceAuthToUser)
+                if (user != Me)
                 {
-                    user.Msg("Resolving User...".Colorize(IrcColorCode.Red));
+                    if (AnnounceAuthToUser)
+                    {
+                        user.Msg("Resolving User...".Colorize(IrcColorCode.Red));
+                    }
+                    AuthMgr.ResolveAuth(user);
                 }
-                AuthMgr.ResolveAuth(user);
             }
             catch (Exception e)
             {
@@ -428,6 +436,8 @@ namespace IRCAddon
                 if (AuthAllUsersOnJoin)
                     foreach (var usr in users)
                     {
+                        if (usr == Me)
+                            return;
                         if (AnnounceAuthToUser)
                         {
                             usr.Msg("Resolving User...".Colorize(IrcColorCode.Red));
@@ -547,6 +557,10 @@ namespace IRCAddon
         /// <returns></returns>
         public override bool TriggersCommand(IrcUser user, IrcChannel chan, StringStream input)
         {
+            if(user == Me)
+            {
+                return true;
+            }
             if (chan != null)
             {
                 if (base.TriggersCommand(user, chan, input))
