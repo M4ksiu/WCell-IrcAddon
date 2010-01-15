@@ -3,16 +3,18 @@ using WCell.RealmServer.Commands;
 using WCellStr = WCell.Util.StringStream;
 using Squishy.Irc;
 
-namespace WCellAddon.IRCAddon.Commands
+namespace IRCAddon.Commands
 {
     public class WCellCmdTrigger : RealmServerCmdTrigger
     {
         public static string WCellCmdPrefix = "#";
-        public static IrcChannel Channel;
-        public static IrcUser User;
+        public IrcChannel Channel;
+        public IrcUser User;
 
         public WCellCmdTrigger(WCellUser user, IrcChannel channel, WCellStr text, RealmServerCmdArgs args) : base(text, args)
         {
+            Channel = channel;
+            User = user.IrcUser;
         }
 
         public override void ReplyFormat(string txt)

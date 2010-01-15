@@ -10,7 +10,7 @@ using WCell.Constants.Tickets;
 using WCell.Util.Commands;
 
 
-namespace WCellAddon.IRCAddon.Commands
+namespace IRCAddon.Commands
 {
     public class AddTestTicketCommand : RealmServerCommand
     {

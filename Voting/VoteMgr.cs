@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using IRCAddon.Commands;
+using IRCAddon.Voting;
 using Squishy.Irc;
 using Squishy.Network;
 using WCell.Util.Variables;
-using WCellAddon.IRCAddon.Commands;
-using WCellAddon.IRCAddon.Voting;
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     class VoteMgr
     {

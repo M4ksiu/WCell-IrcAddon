@@ -1,14 +1,14 @@
 ﻿using System;
+using IRCAddon.Commands;
 using WCell.RealmServer;
 using WCell.RealmServer.Commands;
 using WCell.Intercommunication.DataTypes;
 using Squishy.Irc;
 using WCell.Util.Commands;
-using WCellAddon.IRCAddon.Commands;
 using WCellStr = WCell.Util.StringStream;
 using IrcStr = Squishy.Network.StringStream;
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     public static class WCellUtil
     {
@@ -39,9 +39,9 @@ namespace WCellAddon.IRCAddon
                                                 }
                                                 /*else
                                                 {
-                                                    // User cannot use commands because he does not have a verified Account
-                                                    // maybe send him a link to register online
-                                                    //usr.Msg("You do not have sufficient rights");
+                                                     User cannot use commands because he does not have a verified Account
+                                                     maybe send him a link to register online
+                                                    usr.Msg("You do not have sufficient rights");
                                                 }*/
                                             };
         }
@@ -57,7 +57,6 @@ namespace WCellAddon.IRCAddon
             return accName != null
                        ? RealmServer.Instance.GetOrRequestAccount(accName)
                        : RealmServer.Instance.GetOrRequestAccount(authName);
-            return null;
         }
 
         public static string GetAccName(string authName)
@@ -75,9 +74,6 @@ namespace WCellAddon.IRCAddon
             {
                 if(uArgs.Account.Role >= RoleStatus.Staff)
                 {
-                    WCellCmdTrigger.User = user;
-                    WCellCmdTrigger.Channel = chan;
-
                     var cmdArgs = uArgs.CmdArgs;
                     var trigger = new WCellCmdTrigger(wcellUser, chan, new WCellStr(text), cmdArgs);
 

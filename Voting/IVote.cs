@@ -1,7 +1,7 @@
 using System;
 using Squishy.Irc;
 
-namespace WCellAddon.IRCAddon.Voting
+namespace IRCAddon.Voting
 {
     public interface IVote : IDisposable
     {

@@ -2,7 +2,7 @@
 using Squishy.Irc;
 using WCell.RealmServer;
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     public class IrcAddonConfig
     {
@@ -25,5 +25,15 @@ namespace WCellAddon.IRCAddon
 
         public static Privilege RequiredStaffPriv = Privilege.HalfOp;
         public static string UserName = "Mokbot";
+
+        public static bool PerformOnConnect = true;
+        public static string[] PerformMethods = {"!msg #asda Just testing Perform"};
+
+        public static bool CallOnChannelJoin = true;
+
+        public static string[] CallOnJoin = {
+                                                "#asda:!someCommand;!AnotherCommand arg1 arg2;#WCellCommand arg1 arg2",
+                                                "#chan2:!someCommand;!AnotherCommand arg1 arg2;#WCellCommand arg1 arg2"
+                                            };
     }
 }

@@ -15,7 +15,7 @@ using WCell.RealmServer.Privileges;
 using WCell.Util.Commands;
 using WCell.RealmServer.Help.Tickets;
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     public class WCellUser : IUser, ITicketHandler
     {
@@ -41,7 +41,7 @@ namespace WCellAddon.IRCAddon
 
         public string Name
         {
-            get { return "Irc Bot"; }
+            get { return IrcUser.Nick; }
         }
 
         #endregion
@@ -151,7 +151,7 @@ namespace WCellAddon.IRCAddon
         // Therefor they cannot call ticket handling commands without being staff
         public bool MayHandle(Ticket ticket)
         {
-            return true;
+            return m_Acc.Role.IsStaff;
         }
 
         #endregion

@@ -2,7 +2,7 @@
 using WCell.Constants.Login;
 using WCell.RealmServer;
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     public class ServerStatus
     {

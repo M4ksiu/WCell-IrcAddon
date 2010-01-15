@@ -3,7 +3,7 @@ using WCell.RealmServer.Commands;
 using WCell.RealmServer;
 using Squishy.Irc;
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     /// <summary>
     /// Add objects of this class to any authed user.

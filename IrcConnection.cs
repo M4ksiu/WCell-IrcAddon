@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading;
+using IRCAddon.Commands;
 using Squishy.Irc;
 using Squishy.Irc.Commands;
 using Squishy.Irc.Protocol;
@@ -19,11 +20,10 @@ using WCell.RealmServer.Chat;
 using WCell.RealmServer.Global;
 using WCell.Util.NLog;
 using WCell.Util;
-using WCellAddon.IRCAddon.Commands;
 using StringStream = Squishy.Network.StringStream;
 
 
-namespace WCellAddon.IRCAddon
+namespace IRCAddon
 {
     public class IrcConnection : IrcClient
     {
@@ -50,7 +50,8 @@ namespace WCellAddon.IRCAddon
         public static bool ExceptionChannelNotification = false;
         public static bool ExceptionNotifyStaffUsers = true;
         public static bool EchoBroadcasts = true;
-        public static string IrcCmdPrefix = "%";
+        public static string IrcCmdPrefix = "!";
+        public static bool ReplyOnUnknownCommandUsed = true;
         public static int SendQueue
         {
             get { return ThrottledSendQueue.CharsPerSecond; }
@@ -65,7 +66,7 @@ namespace WCellAddon.IRCAddon
         private Timer _maintainConnTimer;
         private int _reConnectAttempts = 0;
         private string _exceptionChan;
-
+        private Dictionary<string, List<string>> OnJoinCommands = new Dictionary<string, List<string>>();
         #endregion
 
         #endregion
@@ -78,25 +79,30 @@ namespace WCellAddon.IRCAddon
             ProtocolHandler.PacketReceived += OnReceive;
             RealmServer.Shutdown += OnShutdown;
             RealmServer.Instance.StatusChanged += OnStatusNameChange;
-            World.Broadcasted += World_Broadcasted;
+            World.Broadcasted += WorldBroadcasted;
             _maintainConnTimer = new Timer(MaintainCallback);
             LogUtil.ExceptionRaised += LogUtilExceptionRaised;
             Client.Disconnected += Client_Disconnected;
         }
 
-        void World_Broadcasted(IChatter sender, string message)
+        void WorldBroadcasted(IChatter sender, string message)
         {
             if (EchoBroadcasts)
             {
                 foreach (var chan in IrcAddonConfig.UpdatedChannels)
                 {
-                    if(sender != null)
+                    var channel = GetChannel(chan);
+                    if (channel != null)
                     {
-                        GetChannel(chan).Msg(sender.Name + ": " + ChatUtility.Strip(message));
-                    }
-                    else
-                    {
-                        GetChannel(chan).Msg(ChatUtility.Strip(message));
+                        if (sender != null)
+                        {
+                            channel.Msg(sender.Name + ": " + ChatUtility.Strip(message));
+                        }
+
+                        else
+                        {
+                            channel.Msg(ChatUtility.Strip(message));
+                        }
                     }
                 }
             }
@@ -213,6 +219,23 @@ namespace WCellAddon.IRCAddon
 
             IrcCommandHandler.Initialize();
             WCellUtil.Init(this);
+
+            if (IrcAddonConfig.PerformOnConnect)
+            {
+                foreach (var method in IrcAddonConfig.PerformMethods)
+                {
+                    var stream = new StringStream(method);
+                    if (TriggersCommand(Me, null, stream))
+                    {
+                        CommandHandler.ReactTo(new ExecuteCmdTrigger(stream, Me, null));
+                    }
+                }
+            }
+
+            if(IrcAddonConfig.CallOnChannelJoin)
+            {
+                SortToList(ref OnJoinCommands, IrcAddonConfig.CallOnJoin);
+            }
         }
 
         public void OnShutdown()
@@ -353,6 +376,18 @@ namespace WCellAddon.IRCAddon
 
         protected override void OnJoin(IrcUser user, IrcChannel chan)
         {
+            if(OnJoinCommands.ContainsKey(chan.Name))
+            {
+                foreach(var method in OnJoinCommands[chan.Name])
+                {
+                    var stream = new StringStream(method);
+                    // If it's a WCell command, it will be triggered in TriggersCommand
+                    if(TriggersCommand(user, chan, stream))
+                    {
+                        CommandHandler.ReactTo(new ExecuteCmdTrigger(stream, Me, null));
+                    }
+                }
+            }
             //If the bot joins a channel, it will add that chan to _watchedChannels
             if (user == Me)
             {
@@ -441,11 +476,11 @@ namespace WCellAddon.IRCAddon
             {
                 Console.WriteLine("<{0}> {1}", user, text);
             }
-            if (user.IsAuthenticated && text.String.StartsWith(WCellCmdTrigger.WCellCmdPrefix) && uArgs != null)
-            {
-                WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan,
-                                        text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
-            }
+            //if (TriggersWCellCommand(user, chan, text))
+            //{
+            //    WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan,
+            //                            text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
+            //}
         }
 
         #endregion
@@ -526,21 +561,52 @@ namespace WCellAddon.IRCAddon
                         return true;
                     }
                 }
+
+                // Using TriggersCommand() 
+                else if (TriggersWCellCommand(user, input))
+                {
+                    var uArgs = user.Args as WCellArgs; // not null since TriggersWCellCommand checks for that
+                    WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan, input.String);
+                    return false; // We don't want to trigger an IRC command
+                }
             }
 
                 // The auth command can always be called by anyone as long as it's done in private messages
-            else if (input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
+            else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth") || CheckIsStaff(user) || user == Me)
             {
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
 
+                // Using TriggersCommand() 
+            else if (TriggersWCellCommand(user, input))
+            {
+                var uArgs = user.Args as WCellArgs; // not null since TriggersWCellCommand checks for that
+                WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan, input.String);
+                return false; // We don't want to trigger an IRC command
+            }
             return false;
+        }
+
+        /// <summary>
+        /// Check whether the Irc stream triggered a WCell command
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="chan"></param>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public bool TriggersWCellCommand(IrcUser user, StringStream input)
+        {
+            var uArgs = user.Args as WCellArgs;
+            return user.IsAuthenticated && uArgs != null && input.ConsumeNext(WCellCmdTrigger.WCellCmdPrefix);
         }
 
         protected override void OnUnknownCommandUsed(CmdTrigger trigger)
         {
-            //trigger.Reply("Command-Alias not found: " + trigger.Alias);
-            //base.OnUnknownCommandUsed(trigger);
+            if (ReplyOnUnknownCommandUsed)
+            {
+                trigger.Reply("Command-Alias not found: " + trigger.Alias);
+                base.OnUnknownCommandUsed(trigger);
+            }
         }
 
         /// <summary>
@@ -623,8 +689,7 @@ namespace WCellAddon.IRCAddon
             var uArgs = user.Args as WCellArgs;
             if (uArgs != null)
             {
-                if (uArgs.Account.Role.IsStaff)
-                    return true;
+                return uArgs.Account.Role.IsStaff;
             }
             return false;
         }
@@ -707,6 +772,27 @@ namespace WCellAddon.IRCAddon
             }
         }
 
+        private void SortToList(ref Dictionary<string, List<string>> container, string[] arr)
+        {
+            for(int i = 0; i < arr.Length; i++)
+            {
+                var split = arr[i].Split(':');
+                var chanName = split[0];
+                List<string> methods = new List<string>();
+                foreach(var method in split[1].Split(';'))
+                {
+                    methods.Add(method);
+                }
+
+                container.Add(chanName, methods);
+            }
+        }
+
+        private void CallOnChannel(string chanName, string[] callOnChannel)
+        {
+            
+        }
+
         /// <summary>
         /// Formats the channel's topic and adds server status
         /// Only used in OnTopic
@@ -751,7 +837,6 @@ namespace WCellAddon.IRCAddon
                 chan.Topic = chan.Topic.Trim() + " | Server status: " + ServerStatus.StatusName;
             }
         }
-
         #endregion
     }
 }

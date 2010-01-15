@@ -8,7 +8,7 @@ using WCell.RealmServer.Commands;
 using WCell.Util.Commands;
 
 
-namespace WCellAddon.IRCAddon.Commands
+namespace IRCAddon.Commands
 {
     #region Custom RealmServerCommands
 

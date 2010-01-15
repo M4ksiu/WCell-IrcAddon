@@ -3,7 +3,7 @@ using System.Timers;
 using Squishy.Irc;
 using System;
 
-namespace WCellAddon.IRCAddon.Voting
+namespace IRCAddon.Voting
 {
     public class Vote : IVote
     {

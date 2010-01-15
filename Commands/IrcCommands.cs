@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections;
+using IRCAddon.Voting;
 using Squishy.Irc;
 using WCell.RealmServer;
 using WCell.RealmServer.Formulas;
 using WCell.RealmServer.Stats;
 using WCell.RealmServer.Global;
 using Squishy.Irc.Commands;
-using WCellAddon.IRCAddon.Voting;
 
-namespace WCellAddon.IRCAddon.Commands
+namespace IRCAddon.Commands
 {
     #region Custom IrcCommands
 

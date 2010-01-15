@@ -1,4 +1,4 @@
-﻿namespace WCellAddon.IRCAddon
+﻿namespace IRCAddon
 {
     public enum IrcCmdCallingRange
     {
