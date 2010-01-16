@@ -1,4 +1,5 @@
-﻿using WCell.Core.Addons;
+﻿using System;
+using WCell.Core.Addons;
 using System.Globalization;
 
 namespace IRCAddon
@@ -33,6 +34,11 @@ namespace IRCAddon
         public override string GetLocalizedName(CultureInfo culture)
         {
             return "Just an addon";
+        }
+
+        public override void TearDown()
+        {
+            IrcConnection.TearDown();
         }
     }
 }

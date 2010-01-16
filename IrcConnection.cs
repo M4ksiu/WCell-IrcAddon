@@ -63,6 +63,7 @@ namespace IRCAddon
         #region Private Fields
         //Every channel the bot has joined
         private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        private static IrcClient _irc;
         private Timer _maintainConnTimer;
         private int _reConnectAttempts = 0;
         private string _exceptionChan;
@@ -141,12 +142,20 @@ namespace IRCAddon
                                  };
 
                 client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
+                _irc = client;
             }
 
             catch (Exception e)
             {
                 Console.WriteLine("Exception: {0}", e);
             }
+        }
+
+        public static void TearDown()
+        {
+            _irc.Client.SendQueue.Clear();
+            _irc.Client.DisconnectNow();
+            VoteMgr.Votes.Clear();
         }
 
         /// <summary>
