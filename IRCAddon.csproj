@@ -101,10 +101,12 @@
     <Reference Include="Squishy.Irc, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\Squishy.Irc.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Squishy.Network, Version=1.0.3355.36838, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\Squishy.Network.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -149,22 +151,27 @@
     <ProjectReference Include="..\..\Core\WCell.Constants\WCell.Constants.csproj">
       <Project>{42F497A4-0347-491D-8FA8-50E4D8AD19EB}</Project>
       <Name>WCell.Constants</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Core\WCell.Core\WCell.Core.csproj">
       <Project>{EEA9DEB6-8EA6-46F1-B1B7-AB38D8BBCA6C}</Project>
       <Name>WCell.Core</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Core\WCell.Intercommunication\WCell.Intercommunication.csproj">
       <Project>{5997613F-D2A5-4B86-BEE2-C823BC07D5AF}</Project>
       <Name>WCell.Intercommunication</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Services\WCell.RealmServer\WCell.RealmServer.csproj">
       <Project>{A38FAA6D-86B5-4429-85D0-BC93EB5E2C56}</Project>
       <Name>WCell.RealmServer</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Utilities\WCell.Util\WCell.Util.csproj">
       <Project>{F753AF28-A251-4C12-9335-07E8236184F2}</Project>
       <Name>WCell.Util</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
 </Project>

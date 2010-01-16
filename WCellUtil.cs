@@ -74,6 +74,7 @@ namespace IRCAddon
             {
                 if(uArgs.Account.Role >= RoleStatus.Staff)
                 {
+                    text.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray());
                     var cmdArgs = uArgs.CmdArgs;
                     var trigger = new WCellCmdTrigger(wcellUser, chan, new WCellStr(text), cmdArgs);
 
