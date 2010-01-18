@@ -74,9 +74,8 @@ namespace IRCAddon
             {
                 if(uArgs.Account.Role >= RoleStatus.Staff)
                 {
-                    text.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray());
                     var cmdArgs = uArgs.CmdArgs;
-                    var trigger = new WCellCmdTrigger(wcellUser, chan, new WCellStr(text), cmdArgs);
+                    var trigger = new WCellCmdTrigger(wcellUser, chan, new WCellStr(text.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray())), cmdArgs);
 
                     // init the trigger and check if the given args are valid
                     if (trigger.InitTrigger())
