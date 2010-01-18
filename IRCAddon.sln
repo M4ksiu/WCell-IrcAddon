@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C# Express 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCell.IRCAddon", "WCell.IRCAddon.csproj", "{E8F36B44-3596-42A5-9380-4386CF04EDD6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IRCAddon", "IRCAddon.csproj", "{E8F36B44-3596-42A5-9380-4386CF04EDD6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
