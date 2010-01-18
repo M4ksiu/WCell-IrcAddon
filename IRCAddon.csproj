@@ -36,7 +36,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\Run\RealmServer\Lib\</OutputPath>
+    <OutputPath>..\..\Run\RealmServer\AddonBin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -93,7 +93,9 @@
     <Reference Include="Castle.Core, Version=1.0.3.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <Private>False</Private>
     </Reference>
-    <Reference Include="Cell.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86" />
+    <Reference Include="Cell.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="log4net, Version=1.2.9.0, Culture=neutral, PublicKeyToken=a5715cc6d5c3540b">
       <Private>False</Private>
       <HintPath>..\..\Libraries\Binaries\Release\log4net.dll</HintPath>
