@@ -133,9 +133,17 @@ namespace IRCAddon
 
             try
             {
+                
+                var nicks = new string[IrcAddonConfig.Nicks.Length];
+                for (int i = 0; i < IrcAddonConfig.Nicks.Length; i++ )
+                {
+                    var str = IrcAddonConfig.Nicks[i];
+                    nicks[i] = str.Replace(" ", "");
+                }
+
                 var client = new IrcConnection
                                  {
-                                     Nicks = IrcAddonConfig.Nicks,
+                                     Nicks = nicks,
                                      UserName = IrcAddonConfig.UserName,
                                      // the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
                                      Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
@@ -143,6 +151,8 @@ namespace IRCAddon
 
                 client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
                 _irc = client;
+                IrcCommandHandler.Initialize();
+                WCellUtil.Init(client);
             }
 
             catch (Exception e)
@@ -225,9 +235,6 @@ namespace IRCAddon
                     _exceptionChan = sbstr[0];
                 }
             }
-
-            IrcCommandHandler.Initialize();
-            WCellUtil.Init(this);
 
             AuthMgr.ResolveAuth(Me);
 
