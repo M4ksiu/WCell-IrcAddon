@@ -7,6 +7,7 @@ using WCell.RealmServer.Formulas;
 using WCell.RealmServer.Stats;
 using WCell.RealmServer.Global;
 using Squishy.Irc.Commands;
+using WCellAddon.IRCAddon;
 
 namespace IRCAddon.Commands
 {
