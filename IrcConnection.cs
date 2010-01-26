@@ -81,30 +81,32 @@ namespace WCellAddon.IRCAddon
             ProtocolHandler.PacketReceived += OnReceive;
             RealmServer.Shutdown += OnShutdown;
             RealmServer.Instance.StatusChanged += OnStatusNameChange;
-            World.Broadcasted += World_Broadcasted;
+            World.Broadcasted += OnBroadcast;
             _maintainConnTimer = new Timer(MaintainCallback);
             LogUtil.ExceptionRaised += LogUtilExceptionRaised;
-            Client.Disconnected += Client_Disconnected;
+            Client.Disconnected += OnDisconnect;
         }
 
-        void World_Broadcasted(IChatter sender, string message)
+        void OnBroadcast(IChatter sender, string message)
         {
             if (EchoBroadcasts)
             {
-                foreach (var chan in IrcAddonConfig.UpdatedChannels)
+                foreach (var chanInfo in IrcAddonConfig.UpdatedChannels)
                 {
+                	var chan = GetChannel(chanInfo.ChannelName);
+					if (chan == null) continue;
                     if(sender != null)
                     {
-                        GetChannel(chan).Msg(sender.Name + ": " + ChatUtility.Strip(message));
+                        chan.Msg(sender.Name + ": " + ChatUtility.Strip(message));
                     }
                     else
                     {
-                        GetChannel(chan).Msg(ChatUtility.Strip(message));
+						chan.Msg(ChatUtility.Strip(message));
                     }
                 }
             }
         }
-        void Client_Disconnected(Connection con, bool connectionLost)
+        void OnDisconnect(Connection con, bool connectionLost)
         {
             if(connectionLost && ReConnectOnDisconnect)
             {
@@ -141,10 +143,10 @@ namespace WCellAddon.IRCAddon
                 WCellUtil.Init(client);
                 client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
             }
-
             catch (Exception e)
             {
-                Console.WriteLine("Exception: {0}", e);
+                //Console.WriteLine("Exception: {0}", e);
+				LogUtil.ErrorException(e, "[IRCAddon] Unable to connect to {0}", IrcAddonConfig.Network);
             }
         }
 
@@ -195,11 +197,11 @@ namespace WCellAddon.IRCAddon
 
             // We want the bot to join each channel that the user wants updated,
             // just in case s/he forgot to put them on ChannelList
-            foreach(var chan in IrcAddonConfig.UpdatedChannels)
+            foreach(var info in IrcAddonConfig.UpdatedChannels)
             {
-                if(!Channels.Keys.Contains(chan))
+                if(!Channels.Keys.Contains(info.ChannelName))
                 {
-                    CommandHandler.Join(chan);
+                    CommandHandler.Join(info.ChannelName, info.Password);
                 }
             }
 
@@ -384,33 +386,31 @@ namespace WCellAddon.IRCAddon
 
         protected override void OnUsersAdded(IrcChannel chan, IrcUser[] users)
         {
-            Console.WriteLine("Topic was set {0} by {1}", chan.TopicSetTime, chan.TopicSetter);
-            Console.WriteLine("Topic is: {0}", chan.Topic);
-            if (IrcAddonConfig.UpdatedChannels.Length != 0)
-            {
-                foreach (var channel in IrcAddonConfig.UpdatedChannels)
-                {
-                    if (chan.Name == channel)
-                    {
-                        UpdateTopic(chan, chan.Topic);
-                    }
-                }
-            }
-            if (AutoAuth)
-            {
-                if (AuthAllUsersOnJoin)
-                    foreach (var usr in users)
-                    {
-                        if (AnnounceAuthToUser)
-                        {
-                            usr.Msg("Resolving User...".Colorize(IrcColorCode.Red));
-                        }
-                        AuthMgr.ResolveAuth(usr);
-                    }
-            }
+        	Console.WriteLine("Topic was set {0} by {1}", chan.TopicSetTime, chan.TopicSetter);
+        	Console.WriteLine("Topic is: {0}", chan.Topic);
+        	foreach (var channel in IrcAddonConfig.UpdatedChannels)
+        	{
+        		if (chan.Name == channel.ChannelName)
+        		{
+        			UpdateTopic(chan, chan.Topic);
+        		}
+        	}
+
+        	if (AutoAuth)
+        	{
+        		if (AuthAllUsersOnJoin)
+        			foreach (var usr in users)
+        			{
+        				if (AnnounceAuthToUser)
+        				{
+        					usr.Msg("Resolving User...".Colorize(IrcColorCode.Red));
+        				}
+        				AuthMgr.ResolveAuth(usr);
+        			}
+        	}
         }
 
-        // Try and update the topic of the channel after the bot has been privileged
+    	// Try and update the topic of the channel after the bot has been privileged
         // Useful when the bot joined and wasn't privileged to change the topic and if
         // afterwards a user/network service/bot opped the bot, it will try and update the topic
         // Bear in mind this will update the status of *any* channel he is given op or higher priv
@@ -702,20 +702,17 @@ namespace WCellAddon.IRCAddon
 
         private void UpdateImportantChannels()
         {
-            if (IrcAddonConfig.UpdatedChannels.Length != 0)
-            {
-                foreach (var chan in IrcAddonConfig.UpdatedChannels)
-                {
-                    if (_watchedChannels.Contains(chan))
-                    {
-                        var channel = GetChannel(chan);
-                        UpdateTopic(channel, channel.Topic);
-                    }
-                }
-            }
+        	foreach (var chan in IrcAddonConfig.UpdatedChannels)
+        	{
+        		if (_watchedChannels.Contains(chan.ChannelName))
+        		{
+					var channel = GetChannel(chan.ChannelName);
+        			UpdateTopic(channel, channel.Topic);
+        		}
+        	}
         }
 
-        /// <summary>
+    	/// <summary>
         /// Formats the channel's topic and adds server status
         /// Only used in OnTopic
         /// </summary>
