@@ -40,7 +40,7 @@ namespace IRCAddon
 				}
 			}
 		}
-
+        [NotVariable]
 		public static ChannelInfo[] UpdatedChannels = new ChannelInfo[0];
 
 		public static string[] ExceptionChan = { "#ExceptionChannel,ChannelKey" };
