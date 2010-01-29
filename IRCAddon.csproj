@@ -92,14 +92,16 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Castle.Core, Version=1.0.3.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
-      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Libraries\Source\Castle\bin\Castle.Core.dll</HintPath>
     </Reference>
     <Reference Include="Cell.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Core\Cell.Core\bin\Debug\Cell.Core.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.9.0, Culture=neutral, PublicKeyToken=a5715cc6d5c3540b">
-      <Private>False</Private>
-      <HintPath>..\..\Libraries\Binaries\Release\log4net.dll</HintPath>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Libraries\Source\Castle\bin\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Squishy.Irc, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -117,6 +119,26 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WCell.Constants, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Core\WCell.Constants\bin\Debug\WCell.Constants.dll</HintPath>
+    </Reference>
+    <Reference Include="WCell.Core, Version=0.5.3681.41958, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Core\WCell.Core\bin\Debug\WCell.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="WCell.Intercommunication, Version=0.5.3681.41956, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Core\WCell.Intercommunication\bin\Debug\WCell.Intercommunication.dll</HintPath>
+    </Reference>
+    <Reference Include="WCell.RealmServer, Version=0.5.3681.41962, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Run\RealmServer\Debug\WCell.RealmServer.dll</HintPath>
+    </Reference>
+    <Reference Include="WCell.Util, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c1553d4f6290a00f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Utilities\WCell.Util\bin\Debug\WCell.Util.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -149,32 +171,5 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Core\WCell.Constants\WCell.Constants.csproj">
-      <Project>{42F497A4-0347-491D-8FA8-50E4D8AD19EB}</Project>
-      <Name>WCell.Constants</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Core\WCell.Core\WCell.Core.csproj">
-      <Project>{EEA9DEB6-8EA6-46F1-B1B7-AB38D8BBCA6C}</Project>
-      <Name>WCell.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Core\WCell.Intercommunication\WCell.Intercommunication.csproj">
-      <Project>{5997613F-D2A5-4B86-BEE2-C823BC07D5AF}</Project>
-      <Name>WCell.Intercommunication</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Services\WCell.RealmServer\WCell.RealmServer.csproj">
-      <Project>{A38FAA6D-86B5-4429-85D0-BC93EB5E2C56}</Project>
-      <Name>WCell.RealmServer</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Utilities\WCell.Util\WCell.Util.csproj">
-      <Project>{F753AF28-A251-4C12-9335-07E8236184F2}</Project>
-      <Name>WCell.Util</Name>
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
 </Project>
