@@ -94,24 +94,27 @@
     <Reference Include="Castle.Core, Version=1.0.3.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Libraries\Source\Castle\bin\Castle.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Cell.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Core\Cell.Core\bin\Debug\Cell.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Libraries\Source\Castle\bin\log4net.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Squishy.Irc, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\Squishy.Irc.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Squishy.Network, Version=1.0.3355.36838, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\Squishy.Network.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -122,22 +125,27 @@
     <Reference Include="WCell.Constants, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Core\WCell.Constants\bin\Debug\WCell.Constants.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WCell.Core, Version=0.5.3681.41958, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Core\WCell.Core\bin\Debug\WCell.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WCell.Intercommunication, Version=0.5.3681.41956, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Core\WCell.Intercommunication\bin\Debug\WCell.Intercommunication.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WCell.RealmServer, Version=0.5.3681.41962, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Run\RealmServer\Debug\WCell.RealmServer.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="WCell.Util, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c1553d4f6290a00f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Utilities\WCell.Util\bin\Debug\WCell.Util.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
