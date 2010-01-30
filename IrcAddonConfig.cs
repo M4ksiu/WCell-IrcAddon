@@ -44,7 +44,7 @@ namespace IRCAddon
 	    /// Broadcasts are also posted in these channels.
 	    /// </summary>
 	    [Variable("UpdatedChannels")] 
-        public static string[] UpdatedChannelNames;
+        public static string[] UpdatedChannelNames = new[] {"#ChannelName"};
 
         [NotVariable]
         public static ChannelInfo[] ChannelList = new ChannelInfo[0];
