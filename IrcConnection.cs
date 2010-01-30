@@ -536,11 +536,15 @@ namespace WCellAddon.IRCAddon
             }
 
                 // The auth command can always be called by anyone as long as it's done in private messages
-            else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth") | input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
+            else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth")|| CheckIsStaff(user))
             {
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
 
+            else if (input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
+            {
+                return input.ConsumeNext('!');
+            }
             return false;
         }
 
