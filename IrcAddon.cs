@@ -24,7 +24,7 @@ namespace IRCAddon
 
         public override string ShortName
         {
-            get { return "IrcAddon"; }
+            get { return "IrcBot"; }
         }
 
         public override bool UseConfig
@@ -34,7 +34,7 @@ namespace IRCAddon
 
         public override string GetLocalizedName(CultureInfo culture)
         {
-            return "Just an addon";
+            return "Just an addon for allowing use of WCell and its commands on Irc.";
         }
 
         public override void TearDown()
