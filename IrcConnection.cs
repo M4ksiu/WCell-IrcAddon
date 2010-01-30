@@ -21,7 +21,6 @@ using WCell.RealmServer.Chat;
 using WCell.RealmServer.Global;
 using WCell.Util.NLog;
 using WCell.Util;
-using IRCAddon.Commands;
 using StringStream = Squishy.Network.StringStream;
 
 
@@ -537,7 +536,7 @@ namespace WCellAddon.IRCAddon
             }
 
                 // The auth command can always be called by anyone as long as it's done in private messages
-            else if (input.String.ToLower().StartsWith(CommandHandler.RemoteCommandPrefix+"auth") || input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
+            else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth") | input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
             {
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
