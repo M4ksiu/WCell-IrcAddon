@@ -24,7 +24,7 @@ namespace IRCAddon
 
         public override string ShortName
         {
-            get { return "IrcBot"; }
+            get { return "Irc"; }
         }
 
         public override bool UseConfig
