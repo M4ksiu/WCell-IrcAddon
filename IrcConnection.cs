@@ -42,7 +42,7 @@ namespace WCellAddon.IRCAddon
         public static int ReConnectWaitTime = 50;
         public static int ReConnectAttempts = 100;  // If 0, attempts won't be limited
         public static bool ReJoinOnKick = true;
-        
+        public static bool ReplyOnUnknownCommandUsed = true;
         public static bool AuthAllUsersOnJoin = false;
         public static bool UpdateTopicOnFlagAdded = true;
         public static IrcCmdCallingRange IrcCmdCallingRange = IrcCmdCallingRange.LocalChannel;
@@ -51,7 +51,7 @@ namespace WCellAddon.IRCAddon
         public static bool ExceptionChannelNotification = false;
         public static bool ExceptionNotifyStaffUsers = true;
         public static bool EchoBroadcasts = true;
-        public static string IrcCmdPrefix = "%";
+        public static string IrcCmdPrefix = "!";
         public static int SendQueue
         {
             get { return ThrottledSendQueue.CharsPerSecond; }
@@ -550,8 +550,11 @@ namespace WCellAddon.IRCAddon
 
         protected override void OnUnknownCommandUsed(CmdTrigger trigger)
         {
-            //trigger.Reply("Command-Alias not found: " + trigger.Alias);
-            //base.OnUnknownCommandUsed(trigger);
+            if (ReplyOnUnknownCommandUsed)
+            {
+                trigger.Reply("Command-Alias not found: " + trigger.Alias);
+                base.OnUnknownCommandUsed(trigger);
+            }
         }
 
         /// <summary>

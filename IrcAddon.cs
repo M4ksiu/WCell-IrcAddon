@@ -1,7 +1,6 @@
 ﻿using System;
 using WCell.Core.Addons;
 using System.Globalization;
-using WCellAddon.IRCAddon;
 
 namespace IRCAddon
 {
