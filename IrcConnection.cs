@@ -541,7 +541,7 @@ namespace WCellAddon.IRCAddon
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
 
-            else if (input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
+            if (input.String.ToLower().StartsWith("!auth")|| CheckIsStaff(user))
             {
                 return input.ConsumeNext('!');
             }
