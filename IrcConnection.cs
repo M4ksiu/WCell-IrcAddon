@@ -40,7 +40,7 @@ namespace IRCAddon
         public static bool HideOutgoingIrcPackets = false;
         public static bool ReConnectOnDisconnect = true;
         public static int ReConnectWaitTime = 50;
-        public static int ReConnectAttempts = 100;  // If 0, attempts won't be limited
+        public static int ReConnectAttempts = 100; // If 0, attempts won't be limited
         public static bool ReJoinOnKick = true;
         public static bool ReplyOnUnknownCommandUsed = true;
         public static bool AuthAllUsersOnJoin = false;
@@ -52,6 +52,7 @@ namespace IRCAddon
         public static bool ExceptionNotifyStaffUsers = true;
         public static bool EchoBroadcasts = true;
         public static string IrcCmdPrefix = "!";
+
         public static int SendQueue
         {
             get { return ThrottledSendQueue.CharsPerSecond; }
@@ -61,6 +62,7 @@ namespace IRCAddon
         #endregion
 
         #region Private Fields
+
         //Every channel the bot has joined
         private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private Timer _maintainConnTimer;
@@ -86,7 +88,7 @@ namespace IRCAddon
             Client.Disconnected += OnDisconnect;
         }
 
-        void OnBroadcast(IChatter sender, string message)
+        private void OnBroadcast(IChatter sender, string message)
         {
             if (EchoBroadcasts)
             {
@@ -94,7 +96,7 @@ namespace IRCAddon
                 {
                     var chan = GetChannel(chanInfo);
                     if (chan == null) continue;
-                    if(sender != null)
+                    if (sender != null)
                     {
                         chan.Msg(sender.Name + ": " + ChatUtility.Strip(message));
                     }
@@ -105,9 +107,10 @@ namespace IRCAddon
                 }
             }
         }
-        void OnDisconnect(Connection con, bool connectionLost)
+
+        private void OnDisconnect(Connection con, bool connectionLost)
         {
-            if(connectionLost && ReConnectOnDisconnect)
+            if (connectionLost && ReConnectOnDisconnect)
             {
                 StartReConnectTimer();
             }
@@ -259,7 +262,7 @@ namespace IRCAddon
                 if (_reConnectAttempts++ <= ReConnectAttempts)
                 {
                     if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-                        _maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
+                        _maintainConnTimer.Change(ReConnectWaitTime*1000, 0);
                 }
                     // Stop trying to reconnect if we've reached our user defined treshhold
                 else
@@ -270,7 +273,7 @@ namespace IRCAddon
             else
             {
                 if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-                    _maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
+                    _maintainConnTimer.Change(ReConnectWaitTime*1000, 0);
             }
         }
 
@@ -306,7 +309,7 @@ namespace IRCAddon
         {
             base.OnUserLeftChannel(chan, user, reason);
             Console.WriteLine("**{0} quit({1})", user.Nick, reason);
-            if(user == Me)
+            if (user == Me)
             {
                 _watchedChannels.Remove(chan.Name);
             }
@@ -402,7 +405,7 @@ namespace IRCAddon
             }
             if (user.IsAuthenticated && text.String.StartsWith(WCellCmdTrigger.WCellCmdPrefix) && uArgs != null)
             {
-                WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan,
+                WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan,
                                         text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
             }
         }
@@ -488,12 +491,12 @@ namespace IRCAddon
             }
 
                 // The auth command can always be called by anyone as long as it's done in private messages
-            else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth")|| CheckIsStaff(user))
+            else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth") || CheckIsStaff(user))
             {
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
 
-            if (input.String.ToLower().StartsWith("!auth")|| CheckIsStaff(user))
+            if (input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
             {
                 return input.ConsumeNext('!');
             }
@@ -517,7 +520,7 @@ namespace IRCAddon
         protected override void OnCommandFail(CmdTrigger trigger, Exception ex)
         {
             Command cmd = trigger.Command;
-            string[] lines = ex.ToString().Split(new[] { "\r\n|\n|\r" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] lines = ex.ToString().Split(new[] {"\r\n|\n|\r"}, StringSplitOptions.RemoveEmptyEntries);
 
             trigger.Reply("Exception raised: " + lines[0]);
             for (int i = 1; i < lines.Length; i++)
@@ -561,7 +564,7 @@ namespace IRCAddon
                     }
                 }
 
-                if(ExceptionChannelNotification)
+                if (ExceptionChannelNotification)
                 {
                     GetChannel(_exceptionChan).Msg(text);
                 }
