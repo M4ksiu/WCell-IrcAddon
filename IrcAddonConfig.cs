@@ -47,7 +47,7 @@ namespace IRCAddon
 
         [NotVariable] public static ChannelInfo[] ChannelList = new ChannelInfo[0];
 
-        public static string[] ExceptionChan = { "#ExceptionChannel,ChannelKey" };
+        public static string ExceptionChan = "#ExceptionChannel";
         public static string Info = "ChangeMe";
         public static string Network = "euroserv.fr.quakenet.org"; //The network the client will connect to.
 
