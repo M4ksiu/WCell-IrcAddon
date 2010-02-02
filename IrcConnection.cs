@@ -496,10 +496,6 @@ namespace IRCAddon
                 return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
             }
 
-            if (input.String.ToLower().StartsWith("!auth") || CheckIsStaff(user))
-            {
-                return input.ConsumeNext('!');
-            }
             return false;
         }
 
