@@ -67,7 +67,6 @@ namespace IRCAddon
         private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private Timer _maintainConnTimer;
         private int _reConnectAttempts = 0;
-        private string _exceptionChan;
         private static IrcClient _irc;
 
         #endregion
@@ -562,7 +561,7 @@ namespace IRCAddon
 
                 if (ExceptionChannelNotification)
                 {
-                    GetChannel(_exceptionChan).Msg(text);
+                    GetChannel(IrcAddonConfig.ExceptionChan).Msg(text);
                 }
             }
         }
