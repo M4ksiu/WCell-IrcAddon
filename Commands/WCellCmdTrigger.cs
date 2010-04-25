@@ -24,6 +24,11 @@ namespace IRCAddon.Commands
 
         public override void Reply(string txt)
         {
+			if(!IrcConnection.ReplyOnUnknownCommandUsed && txt.ToLower().Contains("unknown command"))
+            {
+                return;
+            }
+
             if (Channel != null)
             {
                 Channel.Msg(txt);
