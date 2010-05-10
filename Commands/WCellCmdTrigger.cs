@@ -1,6 +1,6 @@
 ﻿using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;
-using WCellStr = WCell.Util.StringStream;
+using WCellStr = WCell.Util.Strings.StringStream;
 using Squishy.Irc;
 
 namespace IRCAddon.Commands
