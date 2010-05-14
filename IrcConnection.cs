@@ -404,8 +404,8 @@ namespace IRCAddon
             }
             if (user.IsAuthenticated && text.String.StartsWith(WCellCmdTrigger.WCellCmdPrefix) && uArgs != null)
             {
-                WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan,
-                                        text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
+                if(uArgs.CmdArgs != null)
+                WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan, text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
             }
         }
 
