@@ -406,6 +406,8 @@ namespace IRCAddon
             {
                 if(uArgs.CmdArgs != null)
                 WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan, text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
+                else
+                CommandHandler.Msg(chan,"uArgs.CmdArgs is null!");
             }
         }
 
