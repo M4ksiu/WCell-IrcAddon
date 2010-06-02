@@ -164,7 +164,7 @@ namespace IRCAddon.Commands
                 {
                     foreach(var cmd in matches)
                     {
-                        string desc = string.Format("{0} ({1})", cmd.Usage, cmd.EnglishDescription);
+                        string desc = string.Format("{0} ({1})", cmd.GetParamInfo(trigger), cmd.EnglishDescription);
                         trigger.Reply(desc);
                     }
                 }
@@ -181,7 +181,7 @@ namespace IRCAddon.Commands
                     {
                         subCmdStr += subCmd.Name + ", ";
                     }
-                    var cmdStr = cmd.Name + " (" + cmd.Usage + ") ";
+                    var cmdStr = cmd.Name + " (" + cmd.GetParamInfo(trigger) + ") ";
 
                     if (line.Length + cmdStr.Length >= IrcProtocol.MaxModCount)
                     {
