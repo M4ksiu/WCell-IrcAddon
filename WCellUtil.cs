@@ -58,7 +58,6 @@ namespace WCellAddon.IRCAddon
             return accName != null
                        ? RealmServer.Instance.GetOrRequestAccount(accName)
                        : RealmServer.Instance.GetOrRequestAccount(authName);
-            return null;
         }
 
         public static string GetAccName(string authName)

@@ -136,6 +136,7 @@ namespace IRCAddon
         public ClientLocale Locale
         {
             get { return m_Acc.Locale; }
+            set { } // TODO: Work out if this is appropriate / What it should be set to.
         }
 
         #endregion

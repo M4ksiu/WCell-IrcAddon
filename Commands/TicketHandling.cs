@@ -7,8 +7,9 @@ using WCell.Intercommunication.DataTypes;
 using WCell.RealmServer.Entities;
 using WCell.RealmServer.Help.Tickets;
 using WCell.Constants.Tickets;
+using WCell.RealmServer.Lang;
 using WCell.Util.Commands;
-
+using WCell.Util.Lang;
 
 namespace IRCAddon.Commands
 {
@@ -21,7 +22,7 @@ namespace IRCAddon.Commands
         {
             Init("AddTicket", "AD");
             EnglishDescription = "Add a test ticket. Used for ticket testing only";
-            ParamInfo = "<character> <TicketType> <text>";
+            EnglishParamInfo = "<character> <TicketType> <text>";
             Enabled = true;
         }
 

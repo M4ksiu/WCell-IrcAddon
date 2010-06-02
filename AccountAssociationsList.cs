@@ -2,10 +2,10 @@
 using System.IO;
 using System.Xml.Serialization;
 using WCell.Util;
-
+using System.Xml;
 namespace IRCAddon
 {
-    public class AccountAssociationsList : XmlConfig<AccountAssociationsList>
+    public class AccountAssociationsList : XmlFile<AccountAssociationsList>
     {
         public static string AccountAssociationFileName = "AccAssList.xml";
 

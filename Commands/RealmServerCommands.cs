@@ -38,7 +38,7 @@ namespace IRCAddon.Commands
             {
                 Init("Account", "Acc", "A");
                 EnglishDescription = "Checks for an account ban";
-                ParamInfo = "<Account>";
+                EnglishParamInfo = "<Account>";
             }
 
             public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
@@ -86,7 +86,7 @@ namespace IRCAddon.Commands
             protected override void Initialize()
             {
                 Init("IP");
-                ParamInfo = "<IP>";
+                EnglishParamInfo = "<IP>";
                 EnglishDescription = "Checks for an ip ban";
             }
 
@@ -110,7 +110,7 @@ namespace IRCAddon.Commands
             protected override void Initialize()
             {
                 Init("Char", "Chr", "C");
-                ParamInfo = "<CharacterName>";
+                EnglishParamInfo = "<CharacterName>";
                 EnglishDescription = "Checks for a character ban";
             }
 
@@ -142,7 +142,7 @@ namespace IRCAddon.Commands
             EnglishDescription =
                 "A compact help command to post only the essentials of each command. " +
                 "When you have found your command, use Help or ? command for further information.";
-            ParamInfo = "[CommandName]";
+            EnglishParamInfo = "[CommandName]";
         }
 
         // Domi's helpcommand just modified.
@@ -215,7 +215,7 @@ namespace IRCAddon.Commands
             Init("ADT");
             Enabled = true;
             EnglishDescription = "Command to create a new channel, make the WCellUser join and then echo the chat";
-            ParamInfo = "<ChannelName> <Player>";
+            EnglishParamInfo = "<ChannelName> <Player>";
         }
 
         public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)

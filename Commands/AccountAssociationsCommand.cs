@@ -48,7 +48,7 @@ namespace IRCAddon.Commands
             {
                 Init("Add", "A");
                 EnglishDescription = "Command to add an account association to the list";
-                ParamInfo = "<IrcAuthName> <AccountName>";
+                EnglishParamInfo = "<IrcAuthName> <AccountName>";
             }
 
             public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
@@ -118,7 +118,7 @@ namespace IRCAddon.Commands
             {
                 Init("Remove", "R");
                 EnglishDescription = "Command to remove the account association with the given IrcAuthName";
-                ParamInfo = "<IrcAuthName>";
+                EnglishParamInfo = "<IrcAuthName>";
             }
 
             public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
@@ -167,7 +167,7 @@ namespace IRCAddon.Commands
         {
             Init("AddAccount", "AddAcc");
             EnglishDescription = "Adds the character to the account associations list of Irc for";
-            ParamInfo = "<IrcAuthName> <InGameAccountName";
+            EnglishParamInfo = "<IrcAuthName> <InGameAccountName";
         }
 
         public override void Process(CmdTrigger<RealmServerCmdArgs> trigger)
