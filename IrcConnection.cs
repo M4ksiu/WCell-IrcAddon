@@ -303,6 +303,13 @@ namespace IRCAddon
                 }
             }
         }
+        protected override void OnInvite(IrcUser user, string chan)
+        {
+            if (user != null && chan != null && user.IsAuthenticated)
+            {
+                CommandHandler.Join(chan);
+            }
+        }
 
         protected override void OnUserLeftChannel(IrcChannel chan, IrcUser user, string reason)
         {
