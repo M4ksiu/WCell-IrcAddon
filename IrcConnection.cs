@@ -180,6 +180,8 @@ namespace IRCAddon
 
         public void OnShutdown()
         {
+            UpdateImportantChannels();
+            Thread.Sleep(1000);
             Client.Disconnect();
         }
 

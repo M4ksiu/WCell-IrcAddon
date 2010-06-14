@@ -23,15 +23,15 @@ namespace IRCAddon
 
         public static string GetStatusName()
         {
-            if (RealmServer.Instance.IsRunning && !RealmServer.IsShuttingDown && RealmServer.Instance.AuthClient.IsConnected)
+            if (RealmServer.Instance.IsRunning && !RealmServer.IsShuttingDown && RealmServer.Instance.AuthClient.IsConnected && RealmServerConfiguration.Status != RealmStatus.Locked)
             {
                 statusName = "Online".Colorize(OnlineColor);
             }
-            if (RealmServer.IsShuttingDown)
+            if (RealmServer.IsPreparingShutdown || RealmServer.IsShuttingDown)
             {
                 statusName = "Offline".Colorize(OfflineColor);
             }
-            if (RealmServerConfiguration.Status.ToString() != statusName && RealmServerConfiguration.Status == RealmStatus.Locked && !RealmServer.IsShuttingDown)
+            if (RealmServerConfiguration.Status == RealmStatus.Locked && !RealmServer.IsShuttingDown)
             {
                 statusName = "Locked".Colorize(LockedColor);
             }
