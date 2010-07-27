@@ -45,7 +45,7 @@ namespace IRCAddon.Commands
         /// <summary>
         /// Whether the Character argument needs to be supplied by the trigger's Args
         /// </summary>
-        public override bool NeedsCharacter
+        public override bool RequiresCharacter
         {
             get
             {

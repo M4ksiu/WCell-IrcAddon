@@ -24,7 +24,7 @@ namespace IRCAddon.Commands
             get { return RoleStatus.Admin; }
         }
 
-        public override bool NeedsCharacter
+        public override bool RequiresCharacter
         {
             get { return false; }
         }
