@@ -81,7 +81,7 @@ namespace WCellAddon.IRCAddon
                     // init the trigger and check if the given args are valid
                     if (trigger.InitTrigger())
                     {
-                        RealmCommandHandler.Instance.ExecuteInContext(trigger, false, OnExecuted, OnFail);
+                        RealmCommandHandler.Instance.ExecuteInContext(trigger, OnExecuted, OnFail);
                     }
                     return true;
                 }
