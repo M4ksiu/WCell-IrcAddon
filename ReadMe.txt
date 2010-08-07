@@ -1,0 +1,1 @@
+This repo is not used anymore and is out of date, please use wcell-irc-addon http://github.com
