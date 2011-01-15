@@ -40,7 +40,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\Run\Debug\RealmServerAddons\</OutputPath>
+    <OutputPath>..\..\Run\RealmServerAddons\IrcAddon\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -117,7 +117,7 @@
       <HintPath>Dependencies\Squishy.Irc.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Squishy.Network, Version=1.0.3355.36838, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Squishy.Network, Version=1.0.4025.23485, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\Squishy.Network.dll</HintPath>
       <Private>True</Private>

@@ -6,7 +6,20 @@ namespace IRCAddon
 {
     public class IrcAddon : WCellAddonBase
     {
-        public override string Name
+    	private static IrcAddon _irc;
+    	public IrcConnection[] Connections = new IrcConnection[5];
+
+    	public static IrcAddon Instance
+    	{
+			get { return _irc; }
+    	}
+
+		public IrcAddon()
+		{
+			_irc = this;
+		}
+
+    	public override string Name
         {
             get { return "IRC implementing Addon"; }
         }
@@ -38,7 +51,11 @@ namespace IRCAddon
 
         public override void TearDown()
         {
-            IrcConnection.TearDown();
+            foreach(var con in Connections)
+            {
+            	con.Client.DisconnectNow();
+            	con.TearDown();
+            }
         }
     }
 }

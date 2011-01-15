@@ -16,9 +16,10 @@ namespace IRCAddon
         {
             get
             {
-                if (IrcAddon.Context.File.Directory != null)
+				
+                if (IrcAddon.Instance.Context.File.Directory != null)
                 {
-                    string addonDir = IrcAddon.Context.File.DirectoryName;
+                    string addonDir = IrcAddon.Instance.Context.File.DirectoryName;
                     var path = Path.Combine(addonDir, AccountAssociationFileName);
                     return path;
                 }

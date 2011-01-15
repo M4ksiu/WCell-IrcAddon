@@ -7,7 +7,6 @@ using Squishy.Irc;
 using WCell.Util.Commands;
 using IRCAddon.Commands;
 using WCellStr = WCell.Util.Strings.StringStream;
-using IrcStr = Squishy.Network.StringStream;
 
 namespace WCellAddon.IRCAddon
 {
