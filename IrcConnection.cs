@@ -414,12 +414,12 @@ namespace IRCAddon
 					if (_watchedChannels.Contains(chan.Name) &&
 					    chan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv))
 					{
-						return CheckCmdCallingRange(trigger, chan);
+						return CheckCmdCallingRange(trigger, chan, cmd);
 					}
 				}
 				else if (cmd is AuthCommand || uArgs.Account.Role.IsStaff)
 				{
-					return CheckCmdCallingRange(trigger, chan);
+					return CheckCmdCallingRange(trigger, chan, cmd);
 				}
 			}
 
@@ -436,7 +436,7 @@ namespace IRCAddon
 				}
 				else if (cmd is AuthCommand || CheckIsStaff(trigger.Args.User))
 				{
-					return CheckCmdCallingRange(trigger, userChan);
+					return CheckCmdCallingRange(trigger, userChan, cmd);
 				}
 			}
 			return false;
@@ -578,9 +578,10 @@ namespace IRCAddon
 		/// <param name="trigger"></param>
 		/// <param name="chan"></param>
 		/// <returns>Whether a given user can trigger a command on the target channel</returns>
-		private bool CheckCmdCallingRange(CmdTrigger<IrcCmdArgs> trigger, IrcChannel chan)
+		private bool CheckCmdCallingRange(CmdTrigger<IrcCmdArgs> trigger, IrcChannel chan, IrcCommand cmd)
 		{
-			if (trigger.Command is AuthCommand)
+			var text = trigger.Text.Remainder;
+			if (cmd is AuthCommand)
 				return true;
 
 			switch (IrcCmdCallingRange)
@@ -591,11 +592,11 @@ namespace IRCAddon
 
 					// Allow to call commands if the commands does not contain the channel argument
 				case IrcCmdCallingRange.IsPrivilegedOnTrgt:
-					if (!trigger.Text.Contains("#"))
+					if (!text.Contains("#"))
 						return true;
 
 					// Join command should always be available
-					if (trigger.Command is JoinCommand)
+					if (cmd is JoinCommand)
 						return true;
 
 					else
@@ -615,18 +616,18 @@ namespace IRCAddon
 
 				default:
 					// Allow to call commands if the commands does not contain the channel argument
-					if (!trigger.Text.Contains("#"))
+					if (!text.Contains("#"))
 						return true;
 
 					else
 					{
 						// Join command should always be available
-						if (trigger.Command is JoinCommand)
+						if (cmd is JoinCommand)
 							return true;
 
 						// IF target chan is the same as the triggerer's chan, allow command
 						string chanName = trigger.Text.CloneStream().NextWord(" ");
-						var asd = trigger.Args;
+
 						if (chan.Name == chanName)
 							return true;
 					}

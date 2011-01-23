@@ -25,6 +25,11 @@ namespace WCellAddon.IRCAddon
         {
             irc.AuthMgr.AuthResolved += usr =>
                                             {
+												if(!RealmServer.Instance.AuthClient.IsConnected)
+												{
+													usr.Msg("AuthServer is offline, authentication disabled.");
+													return;
+												}
                                                 var acc = GetAccount(usr.AuthName);
                                                 if (acc != null)
                                                 {
