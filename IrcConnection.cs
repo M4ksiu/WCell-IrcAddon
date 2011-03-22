@@ -124,6 +124,7 @@ namespace IRCAddon
 				             	};
 				WCellUtil.Init(client);
 				client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
+				client.CommandHandler.AddCmdsOfAsm(typeof(IrcConnection).Assembly);
 			}
 			catch (Exception e)
 			{
@@ -151,7 +152,6 @@ namespace IRCAddon
 		/// </summary>
 		protected override void Perform()
 		{
-			CommandHandler.AddCmdsOfAsm(typeof(IrcConnection).Assembly);
 			//CommandHandler.Msg("Q@CServe.QuakeNet.org", "AUTH or whatever"););
 			foreach (var channel in IrcAddonConfig.ChannelList)
 			{
