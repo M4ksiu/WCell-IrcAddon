@@ -151,7 +151,8 @@ namespace IRCAddon
 		/// </summary>
 		protected override void Perform()
 		{
-			//CommandHandler.Msg("Q@CServe.QuakeNet.org", "AUTH or whatever");
+			CommandHandler.AddCmdsOfAsm(typeof(IrcConnection).Assembly);
+			//CommandHandler.Msg("Q@CServe.QuakeNet.org", "AUTH or whatever"););
 			foreach (var channel in IrcAddonConfig.ChannelList)
 			{
 				CommandHandler.Join(channel.ChannelName, channel.Password);
@@ -397,7 +398,7 @@ namespace IRCAddon
 		/// Auth command will always be processed.
 		/// Other command triggers will be handled according to the user's priv levels
 		/// </summary>
-		public override bool MayTriggerCommand(IrcCmdTrigger trigger, IrcCommand cmd)
+		public override bool MayTriggerCommand(CmdTrigger<IrcCmdArgs> trigger, Command<IrcCmdArgs> cmd)
 		{
 			var uArgs = trigger.Args.User.Args as WCellArgs;
 
@@ -477,7 +478,7 @@ namespace IRCAddon
 			return false;
 		}
 
-		protected override void OnUnknownCommandUsed(IrcCmdTrigger trigger)
+		protected override void OnUnknownCommandUsed(CmdTrigger<IrcCmdArgs> trigger)
 		{
 			if (ReplyOnUnknownCommandUsed)
 			{
@@ -491,7 +492,7 @@ namespace IRCAddon
 		/// </summary>
 		/// <param name="trigger"></param>
 		/// <param name="ex"></param>
-		protected override void OnCommandFail(IrcCmdTrigger trigger, Exception ex)
+		protected override void OnCommandFail(CmdTrigger<IrcCmdArgs> trigger, Exception ex)
 		{
 			var cmd = trigger.Command;
 			string[] lines = ex.ToString().Split(new[] {"\r\n|\n|\r"}, StringSplitOptions.RemoveEmptyEntries);
@@ -578,7 +579,7 @@ namespace IRCAddon
 		/// <param name="trigger"></param>
 		/// <param name="chan"></param>
 		/// <returns>Whether a given user can trigger a command on the target channel</returns>
-		private bool CheckCmdCallingRange(CmdTrigger<IrcCmdArgs> trigger, IrcChannel chan, IrcCommand cmd)
+		private bool CheckCmdCallingRange(CmdTrigger<IrcCmdArgs> trigger, IrcChannel chan, Command<IrcCmdArgs> cmd)
 		{
 			var text = trigger.Text.Remainder;
 			if (cmd is AuthCommand)
