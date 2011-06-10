@@ -7,7 +7,7 @@ namespace IRCAddon.Commands
 {
     public class WCellCmdTrigger : RealmServerCmdTrigger
     {
-        public static string WCellCmdPrefix = "#";
+        public static string[] WCellCmdPrefixes = new []{"#"};
         public IrcChannel Channel;
         public IrcUser User;
 

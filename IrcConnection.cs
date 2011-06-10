@@ -51,7 +51,7 @@ namespace IRCAddon
 		public static bool ExceptionChannelNotification = false;
 		public static bool ExceptionNotifyStaffUsers = true;
 		public static bool EchoBroadcasts = true;
-		public static char IrcCmdPrefix = '!';
+		public static string[] IrcCmdPrefixes = new []{"!"};
 
 		public static int SendQueue
 		{
@@ -116,12 +116,12 @@ namespace IRCAddon
 			try
 			{
 				var client = new IrcConnection
-				             	{
-				             		Nicks = IrcAddonConfig.Nicks,
-				             		UserName = IrcAddonConfig.UserName,
-				             		// the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
-				             		Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
-				             	};
+								{
+									Nicks = IrcAddonConfig.Nicks,
+									UserName = IrcAddonConfig.UserName,
+									// the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
+									Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
+								};
 				WCellUtil.Init(client);
 				client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
 				client.CommandHandler.AddCmdsOfAsm(typeof(IrcConnection).Assembly);
@@ -374,19 +374,22 @@ namespace IRCAddon
 		protected override void OnText(IrcUser user, IrcChannel chan, StringStream text)
 		{
 			var uArgs = user.Args as WCellArgs;
-			CommandHandler.RemoteCommandPrefix = IrcCmdPrefix;
+			CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;
 			if (HideChatting != true)
 			{
 				Console.WriteLine("<{0}> {1}", user, text);
 			}
-			if (user.IsAuthenticated && text.String.StartsWith(WCellCmdTrigger.WCellCmdPrefix) && uArgs != null)
-			{
-				if (uArgs.CmdArgs != null)
-					WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan,
-					                        text.String.TrimStart(WCellCmdTrigger.WCellCmdPrefix.ToCharArray()));
-				else
-					CommandHandler.Msg(chan, "uArgs.CmdArgs is null!");
-			}
+            if (user.IsAuthenticated && uArgs != null && WCellCmdTrigger.WCellCmdPrefixes.Iterate(prefix =>
+            {
+                text.Skip(prefix.Length);
+                return !text.String.StartsWith(prefix, StringComparison.CurrentCultureIgnoreCase);
+            }))
+            {
+                if (uArgs.CmdArgs != null)
+                    WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan, text.Remainder);
+                else
+                    CommandHandler.Msg(chan, "uArgs.CmdArgs is null!");
+            }
 		}
 
 		#endregion
@@ -413,7 +416,7 @@ namespace IRCAddon
 				if (uArgs == null)
 				{
 					if (_watchedChannels.Contains(chan.Name) &&
-					    chan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv))
+						chan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv))
 					{
 						return CheckCmdCallingRange(trigger, chan, cmd);
 					}
@@ -429,7 +432,7 @@ namespace IRCAddon
 				if (uArgs == null)
 				{
 					if (_watchedChannels.Contains(userChan.Name) &&
-					    (userChan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv)))
+						(userChan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv)))
 						return true;
 
 					else if (cmd is AuthCommand)
@@ -468,13 +471,11 @@ namespace IRCAddon
 					}
 				}
 			}
-
-				// The auth command can always be called by anyone as long as it's done in private messages
-			else if (input.String.ToLower().StartsWith(IrcCmdPrefix + "auth") || CheckIsStaff(user))
+			// The auth command can always be called by anyone as long as it's done in private messages
+			else if (IrcCmdPrefixes.Iterate(prefix =>{if (input.String.StartsWith(prefix + "auth",StringComparison.CurrentCultureIgnoreCase)){input.Skip(prefix.Length);return true;}return false;}) || CheckIsStaff(user))
 			{
-				return input.ConsumeNext(CommandHandler.RemoteCommandPrefix);
+				return true;
 			}
-
 			return false;
 		}
 
@@ -692,7 +693,7 @@ namespace IRCAddon
 					if (text.Contains("Server status: "))
 					{
 						text = Regex.Replace(text, @"Server status\: [^$ ]+",
-						                     "Server status: " + ServerStatus.StatusName);
+											 "Server status: " + ServerStatus.StatusName);
 						chan.Topic = text;
 					}
 
@@ -713,7 +714,7 @@ namespace IRCAddon
 			if (chan.Topic.Contains("Server status: "))
 			{
 				chan.Topic = Regex.Replace(chan.Topic, @"Server status\: [^$ ]+",
-				                           "Server status: " + ServerStatus.StatusName);
+										   "Server status: " + ServerStatus.StatusName);
 			}
 
 			else
