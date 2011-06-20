@@ -471,12 +471,15 @@ namespace IRCAddon
 					}
 				}
 			}
-			// The auth command can always be called by anyone as long as it's done in private messages
-			else if (IrcCmdPrefixes.Iterate(prefix =>{if (input.String.StartsWith(prefix + "auth",StringComparison.CurrentCultureIgnoreCase)){input.Skip(prefix.Length);return true;}return false;}) || CheckIsStaff(user))
+            else
 			{
-				return true;
+                if (user.IsAuthenticated && CheckIsStaff(user))
+                {
+                    return true;
+                }
 			}
-			return false;
+			// The auth command can always be called by anyone as long as it's done in private messages
+			return IrcCmdPrefixes.Iterate(prefix =>{if (input.String.StartsWith(prefix + "auth",StringComparison.CurrentCultureIgnoreCase)){input.Skip(prefix.Length);return true;}return false;}) || CheckIsStaff(user);
 		}
 
 		protected override void OnUnknownCommandUsed(CmdTrigger<IrcCmdArgs> trigger)
