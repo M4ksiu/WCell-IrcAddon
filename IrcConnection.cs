@@ -377,13 +377,19 @@ namespace IRCAddon
 			CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;		// no idea what this is good for
 			if (!HideChatting)
 			{
-				Console.WriteLine("<{0}> {1}", user, text);
+				Console.WriteLine("<{0}> {1}", user, text);				// no idea what this is good for
 			}
 
-			var hasPrefix = WCellCmdTrigger.WCellCmdPrefixes.Iterate(prefix =>
+			// check if any prefix matches
+			var hasPrefix = IrcCmdPrefixes.Iterate(prefix =>
 							{
-								text.Skip(prefix.Length);
-								return !text.String.StartsWith(prefix, StringComparison.CurrentCultureIgnoreCase);
+								if (text.String.StartsWith(prefix,
+															StringComparison.CurrentCultureIgnoreCase))
+								{
+									text.Skip(prefix.Length);
+									return false;
+								}
+								return true;
 							});
 
 			if (!hasPrefix && chan != null)
@@ -392,23 +398,35 @@ namespace IRCAddon
 				return;
 			}
 
-			if (!user.IsAuthenticated)
+			// first: Try to execute IRC command
+			var trigger = new PrivmsgCmdTrigger(text, user, chan);
+			var cmd = CommandHandler.GetCommand(trigger);
+			if (cmd != null)
 			{
-				// auth now
-				AuthMgr.Authenticator.ResolveAuth(user, usr =>
-				{
-					if (usr.IsAuthenticated)
-					{
-						// auth succeeded, execute command
-						TryExecuteWCellCommand(user, chan, text);
-					}
-
-				});
+				// IRC command exists
+				m_CommandHandler.Execute(trigger, cmd, false);
 			}
 			else
 			{
-				// already auth'ed
-				TryExecuteWCellCommand(user, chan, text);
+				// IRC command does not exist -> Try WCell command
+				if (!user.IsAuthenticated)
+				{
+					// auth now
+					AuthMgr.Authenticator.ResolveAuth(user, usr =>
+					{
+						if (usr.IsAuthenticated)
+						{
+							// auth succeeded -> execute command
+							TryExecuteWCellCommand(user, chan, text);
+						}
+
+					});
+				}
+				else
+				{
+					// already auth'ed -> execute command
+					TryExecuteWCellCommand(user, chan, text);
+				}
 			}
 		}
 
@@ -465,22 +483,11 @@ namespace IRCAddon
 		}
 
 		/// <summary>
-		/// Checks whether the input is a command at all
+		/// Always returns false, because we have a custom command handling implementation
 		/// </summary>
 		public override bool TriggersCommand(IrcUser user, IrcChannel chan, StringStream input)
 		{
-			var hasPrefix = IrcCmdPrefixes.Iterate(prefix =>
-							{
-								if (input.String.StartsWith(prefix,
-															StringComparison.CurrentCultureIgnoreCase))
-								{
-									input.Skip(prefix.Length);
-									return true;
-								}
-								return false;
-							});
-
-			return hasPrefix || chan == null;
+			return false;
 		}
 
 		protected override void OnUnknownCommandUsed(CmdTrigger<IrcCmdArgs> trigger)
@@ -727,5 +734,23 @@ namespace IRCAddon
 		}
 
 		#endregion
+	}
+
+	public class PrivmsgCmdTrigger : IrcCmdTrigger
+	{
+		public PrivmsgCmdTrigger(string args, IrcUser user, IrcChannel chan)
+			: base(args, user, chan)
+		{
+		}
+
+		public PrivmsgCmdTrigger(StringStream args, IrcUser user, IrcChannel chan)
+			: base(args, user, chan)
+		{
+		}
+
+		public override void Reply(string text)
+		{
+			Args.Target.Msg(text);
+		}
 	}
 }
