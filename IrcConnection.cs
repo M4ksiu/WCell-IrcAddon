@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading;
@@ -51,7 +52,7 @@ namespace IRCAddon
 		public static bool ExceptionChannelNotification = false;
 		public static bool ExceptionNotifyStaffUsers = true;
 		public static bool EchoBroadcasts = true;
-		public static string[] IrcCmdPrefixes = new []{"!"};
+		public static string[] IrcCmdPrefixes = new[] { "!" };
 
 		public static int SendQueue
 		{
@@ -244,9 +245,9 @@ namespace IRCAddon
 				if (_reConnectAttempts++ <= ReConnectAttempts)
 				{
 					if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-						_maintainConnTimer.Change(ReConnectWaitTime*1000, 0);
+						_maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
 				}
-					// Stop trying to reconnect if we've reached our user defined treshhold
+				// Stop trying to reconnect if we've reached our user defined treshhold
 				else
 					_maintainConnTimer.Change(Timeout.Infinite, Timeout.Infinite);
 			}
@@ -255,7 +256,7 @@ namespace IRCAddon
 			else
 			{
 				if (!Client.IsConnected && !LoggedIn && !Client.IsConnecting)
-					_maintainConnTimer.Change(ReConnectWaitTime*1000, 0);
+					_maintainConnTimer.Change(ReConnectWaitTime * 1000, 0);
 			}
 		}
 
@@ -373,23 +374,51 @@ namespace IRCAddon
 
 		protected override void OnText(IrcUser user, IrcChannel chan, StringStream text)
 		{
-			var uArgs = user.Args as WCellArgs;
-			CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;
-			if (HideChatting != true)
+			CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;		// no idea what this is good for
+			if (!HideChatting)
 			{
 				Console.WriteLine("<{0}> {1}", user, text);
 			}
-            if (user.IsAuthenticated && uArgs != null && WCellCmdTrigger.WCellCmdPrefixes.Iterate(prefix =>
-            {
-                text.Skip(prefix.Length);
-                return !text.String.StartsWith(prefix, StringComparison.CurrentCultureIgnoreCase);
-            }))
-            {
-                if (uArgs.CmdArgs != null)
-                    WCellUtil.HandleCommand((WCellUser) uArgs.CmdArgs.User, user, chan, text.Remainder);
-                else
-                    CommandHandler.Msg(chan, "uArgs.CmdArgs is null!");
-            }
+
+			var hasPrefix = WCellCmdTrigger.WCellCmdPrefixes.Iterate(prefix =>
+							{
+								text.Skip(prefix.Length);
+								return !text.String.StartsWith(prefix, StringComparison.CurrentCultureIgnoreCase);
+							});
+
+			if (!hasPrefix && chan != null)
+			{
+				// no command prefix and not a private message -> Cannot trigger command
+				return;
+			}
+
+			if (!user.IsAuthenticated)
+			{
+				// auth now
+				AuthMgr.Authenticator.ResolveAuth(user, usr =>
+				{
+					if (usr.IsAuthenticated)
+					{
+						// auth succeeded, execute command
+						TryExecuteWCellCommand(user, chan, text);
+					}
+
+				});
+			}
+			else
+			{
+				// already auth'ed
+				TryExecuteWCellCommand(user, chan, text);
+			}
+		}
+
+		private static void TryExecuteWCellCommand(IrcUser user, IrcChannel chan, StringStream text)
+		{
+			var uArgs = user.Args as WCellArgs;
+			if (uArgs != null && uArgs.CmdArgs != null)
+			{
+				WCellUtil.HandleCommand((WCellUser)uArgs.CmdArgs.User, user, chan, text.Remainder);
+			}
 		}
 
 		#endregion
@@ -407,79 +436,51 @@ namespace IRCAddon
 
 			if (base.MayTriggerCommand(trigger, cmd))
 			{
+				// always ok
 				return true;
 			}
 
-			var chan = trigger.Args.Channel;
-			if (chan != null)
+			if (cmd is AuthCommand)
 			{
-				if (uArgs == null)
-				{
-					if (_watchedChannels.Contains(chan.Name) &&
-						chan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv))
-					{
-						return CheckCmdCallingRange(trigger, chan, cmd);
-					}
-				}
-				else if (cmd is AuthCommand || uArgs.Account.Role.IsStaff)
-				{
-					return CheckCmdCallingRange(trigger, chan, cmd);
-				}
+				// everyone may use the AuthCommand
+				return true;
 			}
 
-			foreach (var userChan in trigger.Args.User.Channels.Values)
+			if (CheckIsStaff(trigger.Args.User))
 			{
-				if (uArgs == null)
-				{
-					if (_watchedChannels.Contains(userChan.Name) &&
-						(userChan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv)))
-						return true;
+				// staff users may trigger 
+				return true;
+			}
 
-					else if (cmd is AuthCommand)
-						return true;
-				}
-				else if (cmd is AuthCommand || CheckIsStaff(trigger.Args.User))
-				{
-					return CheckCmdCallingRange(trigger, userChan, cmd);
-				}
+			if (uArgs == null)
+			{
+				// Unauthorized user
+				// Iterate over all the bot's channels
+				return trigger.Args.User.Channels.Values.Any(userChan =>
+					 _watchedChannels.Contains(userChan.Name) &&
+					userChan.IsUserAtLeast(trigger.Args.User, IrcAddonConfig.RequiredStaffPriv)
+				);
 			}
 			return false;
 		}
 
 		/// <summary>
-		/// Method to check whether the input is a command. Will return true if user is privileged or command is
-		/// the auth command (as long as it's in private messages)
+		/// Checks whether the input is a command at all
 		/// </summary>
-		/// <param name="user">The triggerer</param>
-		/// <param name="chan"></param>
-		/// <param name="input"></param>
-		/// <returns></returns>
 		public override bool TriggersCommand(IrcUser user, IrcChannel chan, StringStream input)
 		{
-			if (chan != null)
-			{
-				if (base.TriggersCommand(user, chan, input))
-				{
-					if (user.IsAuthenticated && CheckIsStaff(user))
-					{
-						return true;
-					}
+			var hasPrefix = IrcCmdPrefixes.Iterate(prefix =>
+							{
+								if (input.String.StartsWith(prefix,
+															StringComparison.CurrentCultureIgnoreCase))
+								{
+									input.Skip(prefix.Length);
+									return true;
+								}
+								return false;
+							});
 
-					if (chan.IsUserAtLeast(user, IrcAddonConfig.RequiredStaffPriv))
-					{
-						return true;
-					}
-				}
-			}
-            else
-			{
-                if (user.IsAuthenticated && CheckIsStaff(user))
-                {
-                    return true;
-                }
-			}
-			// The auth command can always be called by anyone as long as it's done in private messages
-			return IrcCmdPrefixes.Iterate(prefix =>{if (input.String.StartsWith(prefix + "auth",StringComparison.CurrentCultureIgnoreCase)){input.Skip(prefix.Length);return true;}return false;}) || CheckIsStaff(user);
+			return hasPrefix || chan == null;
 		}
 
 		protected override void OnUnknownCommandUsed(CmdTrigger<IrcCmdArgs> trigger)
@@ -499,7 +500,7 @@ namespace IRCAddon
 		protected override void OnCommandFail(CmdTrigger<IrcCmdArgs> trigger, Exception ex)
 		{
 			var cmd = trigger.Command;
-			string[] lines = ex.ToString().Split(new[] {"\r\n|\n|\r"}, StringSplitOptions.RemoveEmptyEntries);
+			string[] lines = ex.ToString().Split(new[] { "\r\n|\n|\r" }, StringSplitOptions.RemoveEmptyEntries);
 
 			trigger.Reply("Exception raised: " + lines[0]);
 			for (int i = 1; i < lines.Length; i++)
@@ -585,17 +586,16 @@ namespace IRCAddon
 		/// <returns>Whether a given user can trigger a command on the target channel</returns>
 		private bool CheckCmdCallingRange(CmdTrigger<IrcCmdArgs> trigger, IrcChannel chan, Command<IrcCmdArgs> cmd)
 		{
+			// TODO: The code is inconsistent and employs some weird heuristics (text.Contains("#") !?)
 			var text = trigger.Text.Remainder;
-			if (cmd is AuthCommand)
-				return true;
 
 			switch (IrcCmdCallingRange)
 			{
-					// Allow to call commands on any target channel
+				// Allow to call commands on any target channel
 				case IrcCmdCallingRange.Everywhere:
 					return true;
 
-					// Allow to call commands if the commands does not contain the channel argument
+				// Allow to call commands if the commands does not contain the channel argument
 				case IrcCmdCallingRange.IsPrivilegedOnTrgt:
 					if (!text.Contains("#"))
 						return true;
