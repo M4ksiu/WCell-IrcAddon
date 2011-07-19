@@ -379,60 +379,60 @@ namespace IRCAddon
             {
                 Console.WriteLine("<{0}> {1}", user, text);				// no idea what this is good for
             }
+			
+			// first: Try to execute IRC command
+			if (HasCommandHasPrefix(text, IrcCmdPrefixes))
+			{
 
-            // check if any prefix matches
-            var hasPrefix = IrcCmdPrefixes.Iterate(prefix =>
-            {
-                if (text.String.StartsWith(prefix,
-                                            StringComparison.CurrentCultureIgnoreCase))
-                {
-                    text.Skip(prefix.Length);
-                    return false;
-                }
-                return true;
-            });
+				var trigger = new PrivmsgCmdTrigger(text, user, chan);
+				var cmd = CommandHandler.GetCommand(trigger);
+				if (cmd != null)
+				{
+					// IRC command exists
+					m_CommandHandler.Execute(trigger, cmd, false);
+				}
+			}
+			else if (HasCommandHasPrefix(text, WCellCmdTrigger.WCellCmdPrefixes))
+			{
+				// IRC command does not exist -> Try WCell command
+				if (!user.IsAuthenticated)
+				{
+					// auth now
+					AuthMgr.Authenticator.ResolveAuth(user, usr =>
+					{
+						if (usr.IsAuthenticated)
+						{
+							// auth succeeded -> execute command
+							TryExecuteWCellCommand(user, chan, text.Remainder);
+						}
 
-            if (!hasPrefix && chan != null)
-            {
-                // no command prefix and not a private message -> Cannot trigger command
-                return;
-            }
-
-            var remainder = text.Remainder;
-
-            // first: Try to execute IRC command
-            var trigger = new PrivmsgCmdTrigger(text, user, chan);
-            var cmd = CommandHandler.GetCommand(trigger);
-            if (cmd != null)
-            {
-                // IRC command exists
-                m_CommandHandler.Execute(trigger, cmd, false);
-            }
-            else
-            {
-                // IRC command does not exist -> Try WCell command
-                if (!user.IsAuthenticated)
-                {
-                    // auth now
-                    AuthMgr.Authenticator.ResolveAuth(user, usr =>
-                    {
-                        if (usr.IsAuthenticated)
-                        {
-                            // auth succeeded -> execute command
-                            TryExecuteWCellCommand(user, chan, remainder);
-                        }
-
-                    });
-                }
-                else
-                {
-                    // already auth'ed -> execute command
-                    TryExecuteWCellCommand(user, chan, remainder);
-                }
-            }
+					});
+				}
+				else
+				{
+					// already auth'ed -> execute command
+					TryExecuteWCellCommand(user, chan, text.Remainder);
+				}
+			}
         }
 
-        private static void TryExecuteWCellCommand(IrcUser user, IrcChannel chan, string text)
+		private static bool HasCommandHasPrefix(StringStream text, IEnumerable<string> prefixes)
+		{
+			// check if any prefix matches
+			var hasPrefix = prefixes.Iterate(prefix =>
+			                                 	{
+			                                 		if (text.String.StartsWith(prefix,
+			                                 		                           StringComparison.CurrentCultureIgnoreCase))
+			                                 		{
+			                                 			text.Skip(prefix.Length);
+			                                 			return false;
+			                                 		}
+			                                 		return true;
+			                                 	});
+			return hasPrefix;
+		}
+
+    	private static void TryExecuteWCellCommand(IrcUser user, IrcChannel chan, string text)
         {
             var uArgs = user.Args as WCellArgs;
             if (uArgs != null && uArgs.CmdArgs != null)

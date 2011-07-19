@@ -82,6 +82,10 @@ namespace WCellAddon.IRCAddon
 					var cmdArgs = uArgs.CmdArgs;
 					var trigger = new WCellCmdTrigger(wcellUser, chan, new WCellStr(text), cmdArgs);
 
+					bool isDouble;
+					RealmCommandHandler.ConsumeCommandPrefix(trigger.Text, out isDouble);
+					trigger.Args.Double = isDouble;
+
 					// init the trigger and check if the given args are valid
 					if (trigger.InitTrigger())
 					{
