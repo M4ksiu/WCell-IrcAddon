@@ -42,12 +42,12 @@ namespace WCellAddon.IRCAddon
 						args.CmdArgs = new RealmServerCmdArgs(wcellUser, false, null);
 					}
 				}
-				/*else
+				else
 				{
 					// User cannot use commands because he does not have a verified Account
 					// maybe send him a link to register online
-					//usr.Msg("You do not have sufficient rights");
-				}*/
+					usr.Msg("You do not have sufficient rights");
+				}
 			};
 		}
 

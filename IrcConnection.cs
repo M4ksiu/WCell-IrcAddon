@@ -380,8 +380,9 @@ namespace IRCAddon
                 Console.WriteLine("<{0}> {1}", user, text);				// no idea what this is good for
             }
 			
+			var textRecieved = text.CloneStream();
 			// first: Try to execute IRC command
-			if (HasCommandHasPrefix(text, IrcCmdPrefixes))
+			if (HasCommandPrefix(text, IrcCmdPrefixes))
 			{
 
 				var trigger = new PrivmsgCmdTrigger(text, user, chan);
@@ -390,45 +391,52 @@ namespace IRCAddon
 				{
 					// IRC command exists
 					m_CommandHandler.Execute(trigger, cmd, false);
+					return;
 				}
 			}
-			else if (HasCommandHasPrefix(text, WCellCmdTrigger.WCellCmdPrefixes))
+			
+			text = textRecieved;
+			// IRC command does not exist -> Try WCell command
+			if (!HasCommandPrefix(text, WCellCmdTrigger.WCellCmdPrefixes)) return;
+
+			if (!user.IsAuthenticated)
 			{
-				// IRC command does not exist -> Try WCell command
-				if (!user.IsAuthenticated)
+				// auth now
+				AuthMgr.Authenticator.ResolveAuth(user, usr =>
 				{
-					// auth now
-					AuthMgr.Authenticator.ResolveAuth(user, usr =>
+					if (usr.IsAuthenticated)
 					{
-						if (usr.IsAuthenticated)
-						{
-							// auth succeeded -> execute command
-							TryExecuteWCellCommand(user, chan, text.Remainder);
-						}
-
-					});
-				}
-				else
-				{
-					// already auth'ed -> execute command
-					TryExecuteWCellCommand(user, chan, text.Remainder);
-				}
+						// auth succeeded -> execute command
+						TryExecuteWCellCommand(user, chan, text.Remainder);
+					}
+					else
+					{
+						// User cannot use commands because he does not have a verified Account
+						// maybe send him a link to register online
+						user.Msg("You do not have sufficient rights");
+					}
+				});
 			}
-        }
+			else
+			{
+				// already auth'ed -> execute command
+				TryExecuteWCellCommand(user, chan, text.Remainder);
+			}
+		}
 
-		private static bool HasCommandHasPrefix(StringStream text, IEnumerable<string> prefixes)
+		private static bool HasCommandPrefix(StringStream text, IEnumerable<string> prefixes)
 		{
 			// check if any prefix matches
 			var hasPrefix = prefixes.Iterate(prefix =>
-			                                 	{
-			                                 		if (text.String.StartsWith(prefix,
-			                                 		                           StringComparison.CurrentCultureIgnoreCase))
-			                                 		{
-			                                 			text.Skip(prefix.Length);
-			                                 			return false;
-			                                 		}
-			                                 		return true;
-			                                 	});
+			{
+				if (text.String.StartsWith(prefix,
+					StringComparison.CurrentCultureIgnoreCase))
+				{
+					text.Skip(prefix.Length);
+					return false;
+				}
+				return true;
+			});
 			return hasPrefix;
 		}
 
