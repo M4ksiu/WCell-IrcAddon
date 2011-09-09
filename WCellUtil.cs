@@ -97,6 +97,11 @@ namespace WCellAddon.IRCAddon
 			return false;
 		}
 
+		public static bool CommandExists(string alias)
+		{
+			return RealmCommandHandler.Instance.Get(alias) != null;	
+		}
+
 		private static void OnExecuted(CmdTrigger<RealmServerCmdArgs> obj)
 		{
 		}

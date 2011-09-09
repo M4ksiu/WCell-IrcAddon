@@ -78,7 +78,7 @@ namespace IRCAddon
         private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private Timer _maintainConnTimer;
         private int _reConnectAttempts = 0;
-
+    	private string _duplicatedCmdPrefix = null;
         #endregion
 
         #endregion
@@ -97,6 +97,17 @@ namespace IRCAddon
             Client.Disconnected += OnDisconnect;
 
             IrcAddon.Instance.Connections.AddElement(this);
+
+			// check if any prefix matches
+			foreach (var cmd in WCellCmdTrigger.WCellCmdPrefixes)
+			{
+				var hasDuplicatedCmdPrefixes = IrcCmdPrefixes.Any(ircCmd => ircCmd == cmd);
+				if (hasDuplicatedCmdPrefixes)
+				{
+					_duplicatedCmdPrefix = cmd;
+					break;
+				}
+			}
         }
 
 
@@ -381,20 +392,46 @@ namespace IRCAddon
             }
 			
 			var textRecieved = text.CloneStream();
+        	
 			// first: Try to execute IRC command
 			if (HasCommandPrefix(text, IrcCmdPrefixes))
 			{
-
+				var isIrcCommand = false;
 				var trigger = new PrivmsgCmdTrigger(text, user, chan);
 				var cmd = CommandHandler.GetCommand(trigger);
 				if (cmd != null)
 				{
+					//check if we have the same prefix
+					//for all commands
+					if (!string.IsNullOrEmpty(_duplicatedCmdPrefix))
+					{
+						//we have, so now check if wcell also has this
+						//command
+						if (WCellUtil.CommandExists(trigger.Alias))
+						{
+							//it does, so now enforce case sensitivity on
+							//the command alias
+							if (trigger.Alias.ToUpper() != trigger.Alias)
+							{
+								trigger.Reply("Running irc command; to execute the WCell command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToUpper());
+								isIrcCommand = true;
+							}
+							else
+							{
+								trigger.Reply("Running WCell command; to execute the irc command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToLower());
+							}
+						}
+					}
+
 					// IRC command exists
-					m_CommandHandler.Execute(trigger, cmd, false);
-					return;
+					if (isIrcCommand)
+					{
+						m_CommandHandler.Execute(trigger, cmd, false);
+						return;
+					}
 				}
 			}
-			
+
 			text = textRecieved;
 			// IRC command does not exist -> Try WCell command
 			if (!HasCommandPrefix(text, WCellCmdTrigger.WCellCmdPrefixes)) return;
