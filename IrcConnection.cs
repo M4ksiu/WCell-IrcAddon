@@ -413,14 +413,16 @@ namespace IRCAddon
 							//the command alias
 							if (trigger.Alias.ToUpper() != trigger.Alias)
 							{
-								trigger.Reply("Running irc command; to execute the WCell command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToUpper());
+								trigger.Reply("Running IRC command; to execute the WCell command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToUpper());
 								isIrcCommand = true;
 							}
 							else
 							{
-								trigger.Reply("Running WCell command; to execute the irc command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToLower());
+								trigger.Reply("Running WCell command; to execute the IRC command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToLower());
 							}
 						}
+						else
+							isIrcCommand = true;
 					}
 
 					// IRC command exists
