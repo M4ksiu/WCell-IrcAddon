@@ -397,53 +397,60 @@ namespace IRCAddon
                 Console.WriteLine("<{0}> {1}", user, text);
             }
         	
-			// first: Try to execute IRC command
-			if (HasCommandPrefix(text, IrcCmdPrefixes))
-			{
-                text.ConsumeSpace();
-                //we need to clone this in case we have a wcell
-                //command, otherwise the processing we do will
-                //consume anything after the prefix
-			    var commandText = text.CloneStream();
-				var trigger = new PrivmsgCmdTrigger(text, user, chan);
-				var cmd = CommandHandler.GetCommand(trigger);
-                //Is this command an IRC command?
-				if (cmd != null)
-				{
-                    //Yep it is! Now check if wcell also has this command?
-                    if (WCellUtil.CommandExists(trigger.Alias))
+			// Just text!
+            if (!HasCommandPrefix(text, IrcCmdPrefixes)) return;
+
+            //Remove any spaces that follow the command prefix
+            text.ConsumeSpace();
+
+            //we need to clone the text stream in case we have
+            //a wcell command, otherwise the processing we do will
+            //consume anything after the prefix
+            var commandText = text.CloneStream();
+
+            //create a command trigger
+            var trigger = new PrivmsgCmdTrigger(text, user, chan);
+
+            //check if we can find a command matching the
+            //provided alias with any IRC commands
+            var cmd = CommandHandler.GetCommand(trigger);
+
+            //Is this command an IRC command?
+            if (cmd != null)
+            {
+                //Yep it is! Now check if wcell also has this command?
+                if (WCellUtil.CommandExists(trigger.Alias))
+                {
+                    //WCell also has the command, now we must 
+                    //enforce case sensitivity on the command alias
+                    if (trigger.Alias.ToUpper() != trigger.Alias) //anything other than an upper case alias
                     {
-                        //WCell also has the command, now we must 
-                        //enforce case sensitivity on the command alias
-                        if (trigger.Alias.ToUpper() != trigger.Alias) //anything other than an upper case alias
-                        {
-                            trigger.Reply("Dont forget commands are case sensitive!");
-                            trigger.Reply("Running IRC command; to execute the WCell command use {0} {1} [args]", IrcCmdPrefixes[0], trigger.Alias.ToUpper());
-                            m_CommandHandler.Execute(trigger, cmd, false);
-                            return;
-                        }
-                        else //an upper case alias
-                        {
-                            trigger.Reply("Running WCell command; to execute the IRC command use {0} {1} [args]", IrcCmdPrefixes[0], trigger.Alias.ToLower());
-                            text = commandText;
-                            CheckAuthAndTryExecuteWCellCommand(user, chan, text);
-                            return;
-                        }
+                        trigger.Reply("Dont forget commands are case sensitive!");
+                        trigger.Reply("Running IRC command; to execute the WCell command use {0} {1} [args]", IrcCmdPrefixes[0], trigger.Alias.ToUpper());
+                        m_CommandHandler.Execute(trigger, cmd, false);
+                        return;
                     }
+                    else //an upper case alias
+                    {
+                        trigger.Reply("Running WCell command; to execute the IRC command use {0} {1} [args]", IrcCmdPrefixes[0], trigger.Alias.ToLower());
+                        text = commandText;
+                        CheckAuthAndTryExecuteWCellCommand(user, chan, text);
+                        return;
+                    }
+                }
                     
-                    //We have a unique IRC command, this is easy
-                    //just execute it!
-                    m_CommandHandler.Execute(trigger, cmd, false);
+                //We have a unique IRC command, this is easy
+                //just execute it!
+                m_CommandHandler.Execute(trigger, cmd, false);
                     
-				}
+            }
 
 			    
-                //If we couldn't find an IRC command try to execute it
-                //as a wcell command!
-                text = commandText; //reset the text first though :)
-                CheckAuthAndTryExecuteWCellCommand(user, chan, text);
-			}
-		}
+            //If we couldn't find an IRC command try to execute it
+            //as a wcell command!
+            text = commandText; //reset the text first though :)
+            CheckAuthAndTryExecuteWCellCommand(user, chan, text);
+        }
 
         private void CheckAuthAndTryExecuteWCellCommand(IrcUser user, IrcChannel chan, StringStream text)
         {
