@@ -17,6 +17,7 @@ using WCell.Constants.Login;
 using WCell.Core.Initialization;
 using WCell.RealmServer;
 using WCell.RealmServer.Chat;
+using WCell.RealmServer.Commands;
 using WCell.RealmServer.Global;
 using WCell.Util.Commands;
 using WCell.Util.NLog;
@@ -52,7 +53,20 @@ namespace IRCAddon
         public static bool ExceptionChannelNotification = false;
         public static bool ExceptionNotifyStaffUsers = true;
         public static bool EchoBroadcasts = true;
-        public static string[] IrcCmdPrefixes = new[] { "!" };
+        private static string[] _ircCmdPrefixes = new[] { "!" };
+        public static string[] IrcCmdPrefixes
+        {
+            get { return _ircCmdPrefixes; }
+            set
+            {
+                
+                for (var i = 0; i < value.Length; i++)
+                {
+                    value[i] = value[i].Trim();
+                }
+                _ircCmdPrefixes = value;
+            }
+        }
 
         public static int SendQueue
         {
@@ -78,7 +92,6 @@ namespace IRCAddon
         private HashSet<string> _watchedChannels = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private Timer _maintainConnTimer;
         private int _reConnectAttempts = 0;
-    	private string _duplicatedCmdPrefix = null;
         #endregion
 
         #endregion
@@ -97,17 +110,6 @@ namespace IRCAddon
             Client.Disconnected += OnDisconnect;
 
             IrcAddon.Instance.Connections.AddElement(this);
-
-			// check if any prefix matches
-			foreach (var cmd in WCellCmdTrigger.WCellCmdPrefixes)
-			{
-				var hasDuplicatedCmdPrefixes = IrcCmdPrefixes.Any(ircCmd => ircCmd == cmd);
-				if (hasDuplicatedCmdPrefixes)
-				{
-					_duplicatedCmdPrefix = cmd;
-					break;
-				}
-			}
         }
 
 
@@ -385,85 +387,92 @@ namespace IRCAddon
 
         protected override void OnText(IrcUser user, IrcChannel chan, StringStream text)
         {
-            CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;		// no idea what this is good for
+            //Any new command prefixes set by the user
+            //also need to be assigned in squishy
+            //i.e using the "cfg s -a irc IrcCmdPrefixes newprefix" command
+            CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;
             if (!HideChatting)
             {
-                Console.WriteLine("<{0}> {1}", user, text);				// no idea what this is good for
+                //Display any received text in the console
+                Console.WriteLine("<{0}> {1}", user, text);
             }
-			
-			var textRecieved = text.CloneStream();
         	
 			// first: Try to execute IRC command
 			if (HasCommandPrefix(text, IrcCmdPrefixes))
 			{
-				var isIrcCommand = false;
+                text.ConsumeSpace();
+                //we need to clone this in case we have a wcell
+                //command, otherwise the processing we do will
+                //consume anything after the prefix
+			    var commandText = text.CloneStream();
 				var trigger = new PrivmsgCmdTrigger(text, user, chan);
 				var cmd = CommandHandler.GetCommand(trigger);
+                //Is this command an IRC command?
 				if (cmd != null)
 				{
-					//check if we have the same prefix
-					//for all commands
-					if (!string.IsNullOrEmpty(_duplicatedCmdPrefix))
-					{
-						//we have, so now check if wcell also has this
-						//command
-						if (WCellUtil.CommandExists(trigger.Alias))
-						{
-							//it does, so now enforce case sensitivity on
-							//the command alias
-							if (trigger.Alias.ToUpper() != trigger.Alias)
-							{
-								trigger.Reply("Running IRC command; to execute the WCell command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToUpper());
-								isIrcCommand = true;
-							}
-							else
-							{
-								trigger.Reply("Running WCell command; to execute the IRC command use {0}{1} [args]", _duplicatedCmdPrefix, trigger.Alias.ToLower());
-							}
-						}
-						else
-							isIrcCommand = true;
-					}
-
-					// IRC command exists
-					if (isIrcCommand)
-					{
-						m_CommandHandler.Execute(trigger, cmd, false);
-						return;
-					}
+                    //Yep it is! Now check if wcell also has this command?
+                    if (WCellUtil.CommandExists(trigger.Alias))
+                    {
+                        //WCell also has the command, now we must 
+                        //enforce case sensitivity on the command alias
+                        if (trigger.Alias.ToUpper() != trigger.Alias) //anything other than an upper case alias
+                        {
+                            trigger.Reply("Dont forget commands are case sensitive!");
+                            trigger.Reply("Running IRC command; to execute the WCell command use {0} {1} [args]", IrcCmdPrefixes[0], trigger.Alias.ToUpper());
+                            m_CommandHandler.Execute(trigger, cmd, false);
+                            return;
+                        }
+                        else //an upper case alias
+                        {
+                            trigger.Reply("Running WCell command; to execute the IRC command use {0} {1} [args]", IrcCmdPrefixes[0], trigger.Alias.ToLower());
+                            text = commandText;
+                            CheckAuthAndTryExecuteWCellCommand(user, chan, text);
+                            return;
+                        }
+                    }
+                    
+                    //We have a unique IRC command, this is easy
+                    //just execute it!
+                    m_CommandHandler.Execute(trigger, cmd, false);
+                    
 				}
-			}
 
-			text = textRecieved;
-			// IRC command does not exist -> Try WCell command
-			if (!HasCommandPrefix(text, WCellCmdTrigger.WCellCmdPrefixes)) return;
-
-			if (!user.IsAuthenticated)
-			{
-				// auth now
-				AuthMgr.Authenticator.ResolveAuth(user, usr =>
-				{
-					if (usr.IsAuthenticated)
-					{
-						// auth succeeded -> execute command
-						TryExecuteWCellCommand(user, chan, text.Remainder);
-					}
-					else
-					{
-						// User cannot use commands because he does not have a verified Account
-						// maybe send him a link to register online
-						user.Msg("You do not have sufficient rights");
-					}
-				});
-			}
-			else
-			{
-				// already auth'ed -> execute command
-				TryExecuteWCellCommand(user, chan, text.Remainder);
+			    
+                //If we couldn't find an IRC command try to execute it
+                //as a wcell command!
+                text = commandText; //reset the text first though :)
+                CheckAuthAndTryExecuteWCellCommand(user, chan, text);
 			}
 		}
 
-		private static bool HasCommandPrefix(StringStream text, IEnumerable<string> prefixes)
+        private void CheckAuthAndTryExecuteWCellCommand(IrcUser user, IrcChannel chan, StringStream text)
+        {
+            if (!user.IsAuthenticated)
+            {
+                // auth now
+                AuthMgr.Authenticator.ResolveAuth(user, usr =>
+                                                            {
+                                                                if (usr.IsAuthenticated)
+                                                                {
+                                                                    // auth succeeded -> execute command
+                                                                    TryExecuteWCellCommand(user, chan, text.Remainder);
+                                                                }
+                                                                else
+                                                                {
+                                                                    // User cannot use commands because he does not have a verified Account
+                                                                    // maybe send him a link to register online
+                                                                    user.Msg("You do not have sufficient rights");
+                                                                }
+                                                            });
+            }
+            else
+            {
+                // already auth'ed -> execute command
+                TryExecuteWCellCommand(user, chan, text.Remainder);
+            }
+        }
+
+        private static bool HasCommandPrefix(StringStream text, IEnumerable<string> prefixes)
 		{
 			// check if any prefix matches
 			var hasPrefix = prefixes.Iterate(prefix =>

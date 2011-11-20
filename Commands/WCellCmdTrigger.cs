@@ -1,4 +1,5 @@
-﻿using WCell.RealmServer.Chat;
+﻿using System;
+using WCell.RealmServer.Chat;
 using WCell.RealmServer.Commands;
 using WCellStr = WCell.Util.Strings.StringStream;
 using Squishy.Irc;
@@ -7,11 +8,11 @@ namespace IRCAddon.Commands
 {
     public class WCellCmdTrigger : RealmServerCmdTrigger
     {
-        public static string[] WCellCmdPrefixes = new []{"#"};
         public IrcChannel Channel;
         public IrcUser User;
 
-        public WCellCmdTrigger(WCellUser user, IrcChannel channel, WCellStr text, RealmServerCmdArgs args) : base(text, args)
+        public WCellCmdTrigger(WCellUser user, IrcChannel channel, WCellStr text, RealmServerCmdArgs args)
+            : base(text, args)
         {
             Channel = channel;
             User = user.IrcUser;
@@ -24,7 +25,7 @@ namespace IRCAddon.Commands
 
         public override void Reply(string txt)
         {
-			if(!IrcConnection.ReplyOnUnknownCommandUsed && txt.ToLower().Contains("unknown command"))
+            if (!IrcConnection.ReplyOnUnknownCommandUsed && txt.ToLower().Contains("unknown command"))
             {
                 return;
             }
