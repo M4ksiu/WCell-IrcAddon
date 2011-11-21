@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Linq;
 using WCell.Core.Addons;
 using System.Globalization;
+using WCell.Core.Initialization;
+using WCell.RealmServer;
 
 namespace IRCAddon
 {
@@ -17,6 +20,7 @@ namespace IRCAddon
 		public IrcAddon()
 		{
 			_irc = this;
+		    RealmServer.Shutdown += TearDown;
 		}
 
     	public override string Name
@@ -49,12 +53,20 @@ namespace IRCAddon
             return "Just an addon for allowing use of WCell and its commands on Irc.";
         }
 
+        [Initialization(InitializationPass.Last)]
+        public static void PerformAutoSave()
+        {
+            Instance.Config.Save();
+        }
+
         public override void TearDown()
         {
-            foreach(var con in Connections)
+            Instance.Config.Save();
+
+            foreach (var con in Connections.Where(con => con != null))
             {
-            	con.Client.DisconnectNow();
-            	con.TearDown();
+                con.Client.DisconnectNow();
+                con.TearDown();
             }
         }
     }
