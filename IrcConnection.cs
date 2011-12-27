@@ -134,7 +134,8 @@ namespace IRCAddon
                     Nicks = IrcAddonConfig.Nicks,
                     UserName = IrcAddonConfig.UserName,
                     // the name that will appear in the hostmask before @ e.g. Mokbot@wcell.org
-                    Info = IrcAddonConfig.Info // The info line: Mokbot@wcell.org : asd (<- this bit)
+                    Info = IrcAddonConfig.Info,// The info line: Mokbot@wcell.org : asd (<- this bit)
+                    ServerPassword = IrcAddonConfig.ServerPassword
                 };
                 WCellUtil.Init(client);
                 client.BeginConnect(IrcAddonConfig.Network, IrcAddonConfig.Port);
@@ -388,7 +389,6 @@ namespace IRCAddon
         protected override void OnText(IrcUser user, IrcChannel chan, StringStream text)
         {
             //Any new command prefixes set by the user
-            //also need to be assigned in squishy
             //i.e using the "cfg s -a irc IrcCmdPrefixes newprefix" command
             CommandHandler.RemoteCommandPrefixes = IrcCmdPrefixes;
             if (!HideChatting)

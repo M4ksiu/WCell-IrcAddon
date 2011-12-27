@@ -59,7 +59,7 @@ namespace IRCAddon
                                //The nicks the client will try and use.
 
         public static int Port = 6667; //The port the client will connect to.
-
+        public static string ServerPassword = "";
         public static Privilege RequiredStaffPriv = Privilege.HalfOp;
         public static string UserName = "Mokbot";
     }
