@@ -30,12 +30,12 @@ namespace IRCAddon
 
         public override string Author
         {
-            get { return "Villem aka Mokrago"; }
+            get { return "WCell"; }
         }
 
         public override string Website
         {
-            get { return "http://wcell.org/forum/member.php?u=839"; }
+            get { return "http://wcell.org/"; }
         }
 
         public override string ShortName
